@@ -7,10 +7,10 @@ DROP TABLE types CASCADE;
 
 CREATE TABLE earthquakes (
     earthquake_id VARCHAR UNIQUE NOT NULL,
-    magnitude FLOAT,
+    magnitude FLOAT NOT NULL,
     lon DECIMAL NOT NULL,
     lat DECIMAL NOT NULL,
-    time TIMESTAMP,
+    time TIMESTAMP CHECK (created_at <= CURRENT_TIMESTAMP),
     felt SMALLINT,
     cdi FLOAT,
     mmi REAL,
@@ -19,11 +19,11 @@ CREATE TABLE earthquakes (
     significance SMALLINT NOT NULL,
     network_id SMALLINT NOT NULL,
     nst SMALLINT,
-    dmin FLOAT,
-    gap FLOAT,
+    dmin REAL,
+    gap REAL,
     magtype_id SMALLINT NOT NULL,
     type SMALLINT,
-    title TEXT,
+    title TEXT NOT NULL,
     depth FLOAT,
     PRIMARY KEY (earthquake_id)
     FOREIGN KEY (alert_id) REFERENCES alerts(alert_id),
@@ -33,34 +33,37 @@ CREATE TABLE earthquakes (
 );
 
 CREATE TABLE alerts (
-    alert_id UNIQUE SMALLINT NOT NULL,
-    alert_value VARCHAR(6),
+    alert_id UNIQUE SMALLINT GENERATED ALWAYS AS IDENTITY,
+    alert_value VARCHAR(6) UNIQUE NOT NULL,
     PRIMARY KEY (alert_id),
 );
 
 CREATE TABLE networks (
-    network_id UNIQUE SMALLINT NOT NULL,
-    network_name VARCHAR(2),
+    network_id UNIQUE SMALLINT GENERATED ALWAYS AS IDENTITY,
+    network_name VARCHAR(2) UNIQUE NOT NULL,
     PRIMARY KEY (network_id)
 );
 
 CREATE TABLE types (
-    type_id UNIQUE SMALLINT NOT NULL,
-    type_value VARCHAR,
+    type_id UNIQUE SMALLINT GENERATED ALWAYS AS IDENTITY,
+    type_value VARCHAR UNIQUE NOT NULL,
     PRIMARY KEY (type_id)
 );
 
 CREATE TABLE status (
-    status_id UNIQUE SMALLINT NOT NULL,
-    status VARCHAR,
+    status_id UNIQUE SMALLINT GENERATED ALWAYS AS IDENTITY,
+    status VARCHAR UNIQUE NOT NULL,
     PRIMARY KEY (status_id)
 );
 
 CREATE TABLE mag_types (
-    mag_type_id UNIQUE SMALLINT NOT NULL,
-    mag_type_value VARCHAR(3),
+    mag_type_id UNIQUE SMALLINT GENERATED ALWAYS AS IDENTITY,
+    mag_type_value VARCHAR(3) UNIQUE NOT NULL,
     PRIMARY KEY (mag_type_id)
 );
 
-
-
+INSERT INTO alerts VALUES ('green'), ('yellow'), ('orange'), ('red');
+INSERT INTO networks VALUES ('ak'), ('at'), ('ci'), ('hv'), ('ld'), ('mb'), ('nc'), ('nm'), ('nn'), ('pr'), ('pt'), ('se'), ('us'), ('uu'), ('uw');
+INSERT INTO types VALUES ('earthquake'), ('quarry');
+INSERT INTO status VALUES ('automatic'), ('reviewed'), ('deleted');
+INSERT INTO mag_types VALUES ('md'), ('ml'), ('ms'), ('mw'), ('me'), ('mi'), ('mb'), ('mlg');
