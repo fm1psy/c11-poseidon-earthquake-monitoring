@@ -1,12 +1,12 @@
 """This file is responsible for downloading the latest earthquake data"""
 import datetime
+
 import requests
 
 URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson"
 FEATURES = "features"
 PROPERTIES = "properties"
 TIME = "time"
-UPDATED = "updated"
 
 
 def get_time_from_epoch_time(time_in_ms: int) -> datetime:
@@ -24,7 +24,6 @@ def get_time_from_epoch_time(time_in_ms: int) -> datetime:
 
 def get_all_earthquake_data(data_url: str) -> list[dict]:
     """Gets all earthquake data for the hour from USGS"""
-
     try:
         response = requests.get(data_url, timeout=30)
         response.raise_for_status()
@@ -40,7 +39,7 @@ def get_all_earthquake_data(data_url: str) -> list[dict]:
         print(f"RequestException occurred in get_all_earthquake_data: {e}")
         return []
 
-
+      
 def get_current_earthquake_data(all_earthquake_data: list[dict]) -> list[dict]:
     """Gets all the most recent earthquakes from data"""
     try:
@@ -68,4 +67,5 @@ def extract_process() -> list[dict]:
         return relevant_data
     except Exception as e:
         print("Error occurred in the extract process: " + e)
-        return []
+        return relevant_data
+
