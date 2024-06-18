@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - '**/*.py'
+      - "**/*.py"
   workflow_dispatch:
 jobs:
   quality_control:
@@ -29,7 +29,7 @@ jobs:
           echo "library installation complete"
       - name: "Run Pytest"
         run: |
-            pytest --only-path="**.py"
+            pytest "**/*.py"
             echo "Ran pytest"
       - name: "Run Pylint"
         run: |
