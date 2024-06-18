@@ -1,4 +1,13 @@
 .venv
 .env
+
 __pycache__
 .pytest_cache
+
+terraform.tfvars
+*.tfvars
+terraform.tfstate
+terraform.tfstate.backup
+.terraform
+.terraform.lock.hcl
+
