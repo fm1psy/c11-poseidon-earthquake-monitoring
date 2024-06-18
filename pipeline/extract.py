@@ -34,7 +34,7 @@ def get_current_earthquake_data(all_earthquake_data: list[dict]) -> list[dict]:
 
 
 def extract_process() -> list[dict]:
-    """Runs the functions to extract all relevant data"""
+    """Runs the functions to extract all the latest earthquakes"""
     all_data = get_all_earthquake_data()
     relevant_data = get_current_earthquake_data(all_data[FEATURES])
     return relevant_data
