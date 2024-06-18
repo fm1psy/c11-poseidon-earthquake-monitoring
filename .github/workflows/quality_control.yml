@@ -22,6 +22,7 @@ jobs:
           python-version: 3.11
       - name: "Install all libraries"
         run: |
+          python -m pip install --upgrade pip
           pip install pytest pylint
           for FILE in $(find . -name 'requirements.txt'); do
             pip install -r $FILE
@@ -29,7 +30,7 @@ jobs:
           echo "library installation complete"
       - name: "Run Pytest"
         run: |
-            pytest "**/*.py"
+            pytest
             echo "Ran pytest"
       - name: "Run Pylint"
         run: |
