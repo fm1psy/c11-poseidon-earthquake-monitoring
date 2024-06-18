@@ -25,7 +25,7 @@ CREATE TABLE earthquakes (
     type SMALLINT,
     title TEXT NOT NULL,
     depth FLOAT,
-    PRIMARY KEY (earthquake_id)
+    PRIMARY KEY (earthquake_id),
     FOREIGN KEY (alert_id) REFERENCES alerts(alert_id),
     FOREIGN KEY (status_id) REFERENCES status(status_id),
     FOREIGN KEY (network_id) REFERENCES networks(network_id),
