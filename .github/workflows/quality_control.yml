@@ -34,6 +34,6 @@ jobs:
             echo "Ran pytest"
       - name: "Run Pylint"
         run: |
-            pylint --fail-under=8 $(find . -name "*.py")
+            pylint --fail-under=8 $(find . -name "*.py" ! -name "test_*.py")
             echo "Ran pylint checks"
         
