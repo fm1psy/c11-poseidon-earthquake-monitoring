@@ -104,6 +104,9 @@ def test_get_all_earthquake_data(mock_requests_get):
         "bbox": [-155.27699279785, 19.39049911499, 0, -117.0975, 61.6806, 29]
     }
 
-    mock_requests_get.get.return_value = fake_data
-    mock_requests_json.return_value = fake_data
-    assert get_all_earthquake_data() == fake_data["features"]
+    mock_response = MagicMock()
+    mock_response.json.return_value = fake_data
+    mock_requests_get.return_value = mock_response
+
+    result = get_all_earthquake_data()
+    assert result == fake_data["features"]
