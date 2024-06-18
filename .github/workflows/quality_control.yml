@@ -22,7 +22,10 @@ jobs:
           python-version: 3.11
       - name: "Install all libraries"
         run: |
-          pip3 install -r requirements.txt
+          pip3 install pytest pylint
+          for FILE in $(find . -name 'requirements.txt'); do
+            pip3 install -r $FILE
+          done
           echo "library installation complete"
       - name: "Run Pytest"
         run: |
