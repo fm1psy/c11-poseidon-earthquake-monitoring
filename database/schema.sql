@@ -35,7 +35,7 @@ CREATE TABLE earthquakes (
 CREATE TABLE alerts (
     alert_id UNIQUE SMALLINT GENERATED ALWAYS AS IDENTITY,
     alert_value VARCHAR(6) UNIQUE NOT NULL,
-    PRIMARY KEY (alert_id),
+    PRIMARY KEY (alert_id)
 );
 
 CREATE TABLE networks (
