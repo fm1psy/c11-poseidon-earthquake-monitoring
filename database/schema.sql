@@ -29,6 +29,7 @@ CREATE TABLE earthquakes (
     FOREIGN KEY (alert_id) REFERENCES alerts(alert_id),
     FOREIGN KEY (status_id) REFERENCES status(status_id),
     FOREIGN KEY (network_id) REFERENCES networks(network_id),
+    FOREIGN KEY (type_id) REFERENCES networks(network_id),
     FOREIGN KEY (mag_type_id) REFERENCES mag_types(mag_type_id)
 );
 
