@@ -10,7 +10,7 @@ CREATE TABLE earthquakes (
     magnitude FLOAT NOT NULL,
     lon DECIMAL NOT NULL,
     lat DECIMAL NOT NULL,
-    time TIMESTAMP CHECK (created_at <= CURRENT_TIMESTAMP),
+    time TIMESTAMP CHECK (time <= CURRENT_TIMESTAMP),
     felt SMALLINT,
     cdi FLOAT,
     mmi REAL,
