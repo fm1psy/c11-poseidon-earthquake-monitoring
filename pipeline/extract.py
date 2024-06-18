@@ -6,9 +6,10 @@ URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojso
 FEATURES = "features"
 PROPERTIES = "properties"
 TIME = "time"
+UPDATED = "updated"
 
 
-def get_minute_from_epoch_time(time_in_ms: int) -> datetime:
+def get_time_from_epoch_time(time_in_ms: int) -> datetime:
     """Given epoch, it converts it to human-readable format"""
     if not isinstance(time_in_ms, int):
         raise TypeError("The input time_in_ms must be an integer.")
@@ -16,7 +17,9 @@ def get_minute_from_epoch_time(time_in_ms: int) -> datetime:
     if time_in_ms < 0:
         raise ValueError("The input time_in_ms cannot be negative.")
 
-    return datetime.datetime.fromtimestamp(time_in_ms / 1000, tz=datetime.timezone.utc).minute
+    full_date = datetime.datetime.fromtimestamp(
+        time_in_ms / 1000, tz=datetime.timezone.utc)
+    return full_date.strftime("%H:%M")
 
 
 def get_all_earthquake_data(data_url: str) -> list[dict]:
@@ -41,19 +44,20 @@ def get_all_earthquake_data(data_url: str) -> list[dict]:
 def get_current_earthquake_data(all_earthquake_data: list[dict]) -> list[dict]:
     """Gets all the most recent earthquakes from data"""
     try:
-        current_minute = datetime.datetime.now().minute
+        current_time = datetime.datetime.now(
+            tz=datetime.timezone.utc).strftime("%H:%M")
         latest_earthquakes = []
 
         for earthquake in all_earthquake_data:
             if PROPERTIES in earthquake and TIME in earthquake[PROPERTIES]:
-                if get_minute_from_epoch_time(earthquake[PROPERTIES][TIME]) == current_minute:
+                if get_time_from_epoch_time(earthquake[PROPERTIES][TIME]) == current_time:
                     latest_earthquakes.append(earthquake)
             else:
-                raise KeyError("Key properties missing from data")
+                continue
         return latest_earthquakes
     except Exception as e:
         print(f"Unexpected error occurred in get_current_earthquake_data: {e}")
-        return []
+        return latest_earthquakes
 
 
 def extract_process() -> list[dict]:

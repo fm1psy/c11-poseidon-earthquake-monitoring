@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from extract import get_minute_from_epoch_time, get_all_earthquake_data, get_current_earthquake_data
+from extract import get_time_from_epoch_time, get_all_earthquake_data, get_current_earthquake_data
 from unittest.mock import MagicMock, patch
 import pytest
 
@@ -16,10 +16,20 @@ def get_current_epoch_time():
     return int(current_time.timestamp() * 1000)
 
 
-def test_get_minute_from_epoch_time(get_current_epoch_time):
+def test_get_time_from_epoch_time(get_current_epoch_time):
     current_time = datetime.now(timezone.utc)
-    assert get_minute_from_epoch_time(
-        get_current_epoch_time) == current_time.minute
+    assert get_time_from_epoch_time(
+        get_current_epoch_time) == current_time.strftime("%H:%M")
+
+
+def test_get_invalid_minute_from_epoch_time():
+    with pytest.raises(ValueError):
+        get_time_from_epoch_time(-1)
+
+
+def test_get_invalid_type_minute_from_epoch_time():
+    with pytest.raises(TypeError):
+        get_time_from_epoch_time("12345")
 
 
 def test_get_all_earthquake_data(mock_requests_get):
