@@ -13,24 +13,28 @@ def get_minute_from_epoch_time(time_in_ms: int) -> datetime:
     return datetime.datetime.fromtimestamp(time_in_ms/1000, tz=datetime.timezone.utc).minute
 
 
-def gets_all_earthquake_data() -> list[dict]:
+def get_all_earthquake_data() -> list[dict]:
     """Gets all earthquake data for the hour from USGS"""
-    response = requests.get(URL)
-    data = response.json()[FEATURES][PROPERTIES]
-    return data
+    response = requests.get(URL, timeout=30)
+    data = response.json()
+    return data[FEATURES]
 
 
 def get_current_earthquake_data(all_earthquake_data: list[dict]) -> list[dict]:
     """Gets all the most recent earthquakes from data"""
     current_minute = datetime.datetime.now().minute
-    print(current_minute)
     latest_earthquakes = []
 
     for earthquake in all_earthquake_data:
-        if get_minute_from_epoch_time(earthquake[TIME]) == current_minute:
+        print(get_minute_from_epoch_time(earthquake[PROPERTIES][TIME]))
+        if get_minute_from_epoch_time(earthquake[PROPERTIES][TIME]) == current_minute:
             latest_earthquakes.append(earthquake)
+
+    return latest_earthquakes
 
 
 def extract_process() -> list[dict]:
     """Runs the functions to extract all relevant data"""
-    ...
+    all_data = get_all_earthquake_data()
+    relevant_data = get_current_earthquake_data(all_data[FEATURES])
+    return relevant_data
