@@ -28,9 +28,9 @@ For a visual representation of the database schema and details on the design dec
 
 ### Entity-Relationship Diagram (ERD)
 
-![ERD Diagram](https://github.com/fm1psy/c11-poseidon-earthquake-monitoring/blob/main/diagrams/erd_diagram.png)
+The provided Entity-Relationship Diagram (ERD) illustrates a database schema designed for tracking earthquake data. The schema follows the principles of Third Normal Form (3NF). There is a main earthquake table that captures data specific to each earthquake event. Additionally, lookup tables are included for categories such as status, alerts and networks.
 
-The provided Entity-Relationship Diagram (ERD) illustrates a database schema designed for tracking earthquake data. The schema follows the principles of Third Normal Form (3NF). There is a main earthquake table that captures data specific to each earthquake event. Additionally, lookup tables are included for categories such as status, alerts, networks, types, and magtypes.
+![ERD Diagram](https://github.com/fm1psy/c11-poseidon-earthquake-monitoring/blob/main/diagrams/erd_diagram.png)
 
 ### Design Decisions
 
