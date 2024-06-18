@@ -62,7 +62,7 @@ The sections below detail all the instructions to get this project running.
 |  DB_PASSWORD  |  *your_username*  |
 |  DB_USER  |  *your_password*  |
 |  DB_NAME  |  *your_db_name*  |
-|  DB_SCHEMA  |  *your_db_schema*  |
+
 
 > [!IMPORTANT]  
 > To be able to run these scripts the following details must be provided in the `.env` file and should NOT be shared.
