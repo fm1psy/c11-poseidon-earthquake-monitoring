@@ -13,9 +13,9 @@ def get_minute_from_epoch_time(time_in_ms: int) -> datetime:
     return datetime.datetime.fromtimestamp(time_in_ms/1000, tz=datetime.timezone.utc).minute
 
 
-def get_all_earthquake_data() -> list[dict]:
+def get_all_earthquake_data(data_url: str) -> list[dict]:
     """Gets all earthquake data for the hour from USGS"""
-    response = requests.get(URL, timeout=30)
+    response = requests.get(data_url, timeout=30)
     data = response.json()
     return data[FEATURES]
 
@@ -35,6 +35,6 @@ def get_current_earthquake_data(all_earthquake_data: list[dict]) -> list[dict]:
 
 def extract_process() -> list[dict]:
     """Runs the functions to extract all the latest earthquakes"""
-    all_data = get_all_earthquake_data()
+    all_data = get_all_earthquake_data(URL)
     relevant_data = get_current_earthquake_data(all_data[FEATURES])
     return relevant_data
