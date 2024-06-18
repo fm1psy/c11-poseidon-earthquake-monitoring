@@ -114,7 +114,7 @@ def test_get_all_earthquake_data(mock_requests_get):
     mock_response.json.return_value = test_data
     mock_requests_get.return_value = mock_response
 
-    result = get_all_earthquake_data()
+    result = get_all_earthquake_data("test.com")
     assert result == test_data["features"]
 
 
