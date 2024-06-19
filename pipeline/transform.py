@@ -1,40 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
-
-example = [{'type': 'Feature',
-            'properties': {'mag': 0.67,
-                           'place': '13 km WSW of Searles Valley, CA',
-                           'time': 1718718656830,
-                           'updated': 1718720255694,
-                           'tz': None,
-                           'url': 'https://earthquake.usgs.gov/earthquakes/eventpage/ci40801680',
-                           'detail': 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/ci40801680.geojson',
-                           'felt': None,
-                           'cdi': None,
-                           'mmi': None,
-                           'alert': 'error',
-                           'status': 'reviewed',
-                           'tsunami': 0,
-                           'sig': 7,
-                           'net': 'ci',
-                           'code': '40801680',
-                           'ids': ',ci40801680,',
-                           'sources': ',ci,',
-                           'types': ',nearby-cities,origin,phase-data,scitech-link,',
-                           'nst': 17,
-                           'dmin': 0.1163,
-                           'rms': 0.13,
-                           'gap': 146,
-                           'magType': 'ml',
-                           'type': 'earthquake',
-                           'title': 'M 0.7 - 13 km WSW of Searles Valley, CA'},
-            'geometry': {'type': 'Point', 'coordinates': [-117.542, 35.7305, 1.88]},
-            'id': 'ci40801680'}]
-
-
-
-
-
 
 PAGER_ALERT_LEVELS = ['green', 'yellow', 'orange', 'red']
 READING_STATUS = ['automatic', 'reviewed', 'deleted']
@@ -57,7 +22,6 @@ MAX_SIG = 1000
 MIN_SIG = 0
 MAX_GAP = 360.0
 MIN_GAP = 0.0
-CURRENT_TIME = datetime.now()
 
 def convert_epoch_to_utc(time_in_ms: int) -> datetime:
     """
@@ -158,8 +122,8 @@ def get_earthquake_data(data):
         'magtype': magtype,
         'earthquake_type': earthquake_type,
         'magnitude': magnitude,
-        'longitude': lon,
-        'latitude': lat,
+        'lon': lon,
+        'lat': lat,
         'depth': depth,
         'time': time,
         'felt': felt,
@@ -174,6 +138,12 @@ def get_earthquake_data(data):
 
 
 def validate_earthquake_naming(name):
+    """
+    Used to validate earthquake_id and title
+    """
+    if name == None:
+        logging.error('No recorded value')
+        return None
 
     if not isinstance(name, str):
         logging.error('Invalid data type: expected string')
@@ -182,25 +152,46 @@ def validate_earthquake_naming(name):
     return name
 
 
-def convert_epoch_to_utc(time_in_ms: int) -> datetime:
+def convert_epoch_to_utc(time_in_ms: int):
     """
     Given epoch, it converts it into: DD/MM/YYYY HH:MM:SS
     """
+    return datetime.fromtimestamp(time_in_ms / 1000, tz=timezone.utc)
+
+
+def validate_time(time_in_ms: int) -> datetime:
+    """
+    Used to validate the time, given an epoch value
+    """
+    if time_in_ms == None:
+        logging.error('No recorded value')
+        return None
+    
+    current_time = datetime.now(timezone.utc)
+
     if not isinstance(time_in_ms, int):
         logging.error('Invalid data type: expected int')
-        return CURRENT_TIME
+        return current_time.strftime("%d/%m/%Y %H:%M:%S")
 
-    recording_time = datetime.fromtimestamp(
-        time_in_ms / 1000, tz=timezone.utc)
+    recording_time = convert_epoch_to_utc(time_in_ms)
 
-    if recording_time > CURRENT_TIME:
-        logging.error('Future earthquake can not be predicted')
-        return CURRENT_TIME
+    if recording_time > current_time:
+        logging.error('Future earthquake cannot be predicted')
+        return current_time.strftime("%d/%m/%Y %H:%M:%S")
 
     return recording_time.strftime("%d/%m/%Y %H:%M:%S")
 
 
 def validate_inputs(input):
+    """
+    Used to validate data where data has been inputted manually,
+    checks number of people who felt the earthquake and number of
+    stations which recorded the earthquake
+    """
+    if input == None:
+        logging.error('No recorded value')
+        return None
+    
     if not isinstance(input, int):
         logging.error('Invalid data type: expected int')
         return None
@@ -212,7 +203,14 @@ def validate_inputs(input):
     return input
 
 
-def validate_dmin(dmin):
+def validate_dmin(dmin: float) -> None | float:
+    """
+    Used to validate 
+    """
+    if dmin == None:
+        logging.error('No recorded value')
+        return None
+    
     if not isinstance(dmin, float):
         logging.error('Invalid data type: expected int')
         return None
@@ -229,6 +227,11 @@ def validate_property(value, property):
     This function can validate earthquake readings for: 
     alert, status, network, magtype and type.
     """
+
+    if value == None:
+        logging.error('No recorded value')
+        return None
+    
     valid_values = {
         'alert': PAGER_ALERT_LEVELS,
         'status': READING_STATUS,
@@ -249,6 +252,10 @@ def validate_property(value, property):
 
 
 def validate_reading(reading, reading_type):
+    if reading == None:
+        logging.error('No recorded value')
+        return None
+    
     reading_types = {
         'mag': [MAX_MAGNITUDE, MIN_MAGNITUDE],
         'lon': [MAX_LON, MIN_LON],
@@ -263,7 +270,7 @@ def validate_reading(reading, reading_type):
     max_value = reading_types[reading_type][0]
     min_value = reading_types[reading_type][1]
 
-    if not isinstance(reading, float) or not isinstance(reading, int):
+    if not isinstance(reading, (float, int)):
         logging.error('Invalid data type: expected a number')
         return None
 
@@ -276,16 +283,40 @@ def validate_reading(reading, reading_type):
 
 
 def clean_data(data):
-    ...
+    return {
+        'earthquake_id': validate_earthquake_naming(data['earthquake_id']),
+        'alert': validate_property(data['alert'], 'alert'),
+        'status': validate_property(data['status'], 'status'),
+        'network': validate_property(data['network'], 'network'),
+        'magtype': validate_property(data['magtype'], 'magtype'),
+        'earthquake_type': validate_property(data['earthquake_type'], 'type'),
+        'magnitude': validate_reading(data['magnitude'], 'mag'),
+        'lon': validate_reading(data['lon'], 'lon'),
+        'lat': validate_reading(data['lat'], 'lat'),
+        'depth': validate_reading(data['depth'], 'depth'),
+        'time': validate_time(data['time']),
+        'felt': validate_inputs(data['felt']),
+        'cdi': validate_reading(data['cdi'], 'cdi'),
+        'mmi': validate_reading(data['mmi'], 'mmi'),
+        'significance': validate_reading(data['significance'], 'sig'),
+        'nst': validate_inputs(data['nst']),
+        'dmin': validate_dmin(data['dmin']),
+        'gap': validate_reading(data['gap'], 'gap'),
+        'title': validate_earthquake_naming(data['title'])
+    }
 
-def transform_process():
+
+def transform_process(extracted_data):
+
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(levelname)s - %(message)s')
-    return [get_earthquake_data(data)for data in example]
-       
+    latest_data = [get_earthquake_data(data)for data in extracted_data]
+    print(latest_data)
+    print('\n')
+    return [clean_data(data) for data in latest_data]
 
 if __name__ == "__main__":
     
-    print(transform_process())
+    print(transform_process(extracted_data))
 
 
