@@ -5,36 +5,6 @@
 from datetime import datetime, timezone
 import logging
 
-extracted_data = [{'type': 'Feature',
-                   'properties': {'mag': 0.67,
-                                  'place': '13 km WSW of Searles Valley, CA',
-                                  'time': 1718718656830,
-                                  'updated': 1718720255694,
-                                  'tz': None,
-                                  'url': 'https://earthquake.usgs.gov/earthquakes/eventpage/ci40801680',
-                                  'detail': 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/ci40801680.geojson',
-                                  'felt': None,
-                                  'cdi': None,
-                                  'mmi': None,
-                                  'alert': None,
-                                  'status': 'reviewed',
-                                  'tsunami': 0,
-                                  'sig': 7,
-                                  'net': 'ci',
-                                  'code': '40801680',
-                                  'ids': ',ci40801680,',
-                                  'sources': ',ci,',
-                                  'types': ',nearby-cities,origin,phase-data,scitech-link,',
-                                  'nst': 17,
-                                  'dmin': 0.1163,
-                                  'rms': 0.13,
-                                  'gap': 146,
-                                  'magType': 'ml',
-                                  'type': 'earthquake',
-                                  'title': 'M 0.7 - 13 km WSW of Searles Valley, CA'},
-                   'geometry': {'type': 'Point', 'coordinates': [-117.542, 35.7305, 1.88]},
-                   'id': 'ci40801680'}]
-
 PAGER_ALERT_LEVELS = ['green', 'yellow', 'orange', 'red']
 READING_STATUS = ['automatic', 'reviewed', 'deleted']
 NETWORKS = ['ak', 'at', 'ci', 'hv', 'ld', 'mb', 'nc', 'nm',
@@ -347,6 +317,3 @@ def transform_process(extracted_data: list[dict]) -> list[dict]:
                         format='%(asctime)s - %(levelname)s - %(message)s')
     latest_data = [get_earthquake_data(data)for data in extracted_data]
     return [clean_data(data) for data in latest_data]
-
-if __name__ == "__main__":
-    print(transform_process(extracted_data))
