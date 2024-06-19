@@ -1,4 +1,6 @@
 """This file is responsible for downloading the latest earthquake data"""
+# pylint disable: W0718
+
 import datetime
 
 import requests
