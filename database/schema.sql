@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS earthquakes, alerts, statuses, magtypes, networks, types;
+DROP TABLE IF EXISTS earthquakes, alerts, networks, magtypes, statuses, types;
 
 CREATE TABLE alerts (
     alert_id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
