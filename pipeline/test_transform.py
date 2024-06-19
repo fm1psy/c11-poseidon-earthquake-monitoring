@@ -29,3 +29,28 @@ extracted_data = [{'type': 'Feature',
                                   'title': 'M 0.7 - 13 km WSW of Searles Valley, CA'},
                    'geometry': {'type': 'Point', 'coordinates': [-117.542, 35.7305, 1.88]},
                    'id': 'ci40801680'}]
+
+
+def validate_time(time_in_ms: int) -> str:
+    """
+    Used to validate the time, given an epoch value
+    """
+    if time_in_ms is None:
+        logging.error('No recorded value')
+        return None
+
+    current_time = datetime.now(timezone.utc)
+
+    if not isinstance(time_in_ms, int):
+        logging.error('Invalid data type: expected int')
+        return current_time.strftime("%d/%m/%Y %H:%M:%S")
+
+    recording_time = convert_epoch_to_utc(time_in_ms)
+
+    if recording_time > current_time:
+        logging.error('Future earthquake cannot be predicted')
+        return current_time.strftime("%d/%m/%Y %H:%M:%S")
+
+    return recording_time.strftime("%d/%m/%Y %H:%M:%S")
+
+print(type(validate_time(3242425)))
