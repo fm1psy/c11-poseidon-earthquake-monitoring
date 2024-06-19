@@ -30,6 +30,16 @@ def get_cursor(conn: connection) -> cursor:
 
 def get_all_networks(cursor: cursor) -> list:
     """Gets all networks in RDS"""
+    formatted_networks = {}
+    cursor.execute("""SELECT * FROM networks;""")
+    networks = cursor.fetchall()
+    for network in networks:
+        formatted_networks[network["network_name"]] = network["network_id"]
+    return formatted_networks
+
+
+def get_all_statuses(cursor: cursor) -> list:
+    """Gets all statuses in RDS"""
     formatted_statuses = {}
     cursor.execute("""SELECT * FROM statuses;""")
     statuses = cursor.fetchall()
@@ -41,3 +51,5 @@ def get_all_networks(cursor: cursor) -> list:
 if __name__ == "__main__":
     con = get_connection(DB_HOST, DB_NAME, DB_USERNAME, DB_PASSWORD, DB_PORT)
     cur = get_cursor(con)
+    print(get_all_networks(cur))
+    print(get_all_statuses(cur))
