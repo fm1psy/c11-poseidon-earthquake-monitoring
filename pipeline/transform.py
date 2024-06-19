@@ -41,6 +41,22 @@ READING_STATUS = ['automatic', 'reviewed', 'deleted']
 NETWORKS = ['ak', 'at', 'ci', 'hv', 'ld', 'mb', 'nc', 'nm', 'nn', 'pr', 'pt', 'se', 'us', 'uu', 'uw']
 MAGNITUDE_TYPES = ['md', 'ml', 'ms', 'mw', 'me', 'mi', 'mb', 'mlg']
 EARTHQUAKE_TYPES = ['earthquake', 'quarry']
+MAX_MAGNITUDE = 10.0
+MIN_MAGNITUDE = -1.0
+MAX_LON = 180.0
+MIN_LON = -180.0
+MAX_LAT = 90.0
+MIN_LAT = -90.0
+MAX_DEPTH = 1000
+MIN_DEPTH = 0
+MAX_CDI = 12.0
+MIN_CDI = 1.0
+MAX_MMI = 12.0
+MIN_MMI = 1.0
+MAX_SIG = 1000
+MIN_SIG = 0
+MAX_GAP = 360.0
+MIN_GAP = 0.0
 
 def convert_epoch_to_utc(time_in_ms: int) -> datetime:
     """
@@ -116,19 +132,19 @@ def get_earthquake_data(data):
     network = get_earthquake_property(data, 'net')  # validate_property
     magtype = get_earthquake_property(data, 'magType')  # validate_property
     earthquake_type = get_earthquake_property(data, 'type')  # validate_property
-    magnitude = get_earthquake_property(data, 'mag')
-    lon = get_earthquake_geometry(data, 'lon')
-    lat = get_earthquake_geometry(data, 'lat')
-    depth = get_earthquake_geometry(data, 'depth')
-    time = get_earthquake_property(data, 'time')
-    felt = get_earthquake_property(data, 'felt')
-    cdi = get_earthquake_property(data, 'cdi') #intensity
-    mmi = get_earthquake_property(data, 'mmi') #intensity
-    significance = get_earthquake_property(data, 'sig')
-    nst = get_earthquake_property(data,'nst') #number of stations
-    dmin = get_earthquake_property(data, 'dmin') #station distance from epicentre, smaller is better
-    gap = get_earthquake_property(data, 'gap') #gap between 2 stations
-    title = get_earthquake_property(data, 'title') 
+    magnitude = get_earthquake_property(data, 'mag') #validate_reading
+    lon = get_earthquake_geometry(data, 'lon')  # validate_reading
+    lat = get_earthquake_geometry(data, 'lat')  # validate_reading
+    depth = get_earthquake_geometry(data, 'depth')  # validate_reading
+    time = get_earthquake_property(data, 'time')  # TODO
+    felt = get_earthquake_property(data, 'felt')  # TODO
+    cdi = get_earthquake_property(data, 'cdi')  # validate_reading
+    mmi = get_earthquake_property(data, 'mmi')  # validate_reading
+    significance = get_earthquake_property(data, 'sig')  # validate_reading
+    nst = get_earthquake_property(data, 'nst')  # TODO
+    dmin = get_earthquake_property(data, 'dmin')  # TODO
+    gap = get_earthquake_property(data, 'gap')  # validate_reading
+    title = get_earthquake_property(data, 'title') #TODO
 
     return {
         'earthquake_id': earthquake_id,
@@ -175,13 +191,33 @@ def validate_property(value, property):
     
     return value.lower()
 
-def validate_magnitude(magnitude):
-    if 0.0 <= magnitude <= 10.0:
-        return True
-    else:
-        logging.error(f'Magnitude value {magnitude} out of range. '
-                      f'Value must be between {0.0} and {10.0}.')
-        return False
+
+def validate_reading(reading, reading_type):
+    reading_types = {
+        'mag': [MAX_MAGNITUDE, MIN_MAGNITUDE],
+        'lon': [MAX_LON, MIN_LON],
+        'lat': [MAX_LAT, MIN_LAT],
+        'depth': [MAX_DEPTH, MIN_DEPTH],
+        'cdi': [MAX_CDI, MIN_CDI],
+        'mmi': [MAX_MMI, MIN_MMI],
+        'sig': [MAX_SIG, MIN_SIG],
+        'gap': [MAX_GAP, MIN_GAP]
+    }
+
+    max_value = reading_types[reading_type][0]
+    min_value = reading_types[reading_type][1]
+
+    if not isinstance(reading, float) or not isinstance(reading, int):
+        logging.error('Invalid data type: expected a number')
+        return None
+
+    if not (min_value <= reading <= max_value):
+        logging.error(f'Magnitude value {reading} out of range. '
+                      f'Value must be between {min_value} and {max_value}.')
+        return None
+
+    return reading
+
 
 def clean_data(data):
     ...
