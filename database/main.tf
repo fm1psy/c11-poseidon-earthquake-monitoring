@@ -27,7 +27,7 @@ resource "aws_security_group" "db-security-group" {
 
 # 2 RDS to store real-time earthquake data
 resource "aws_db_instance" "earthquake-monitoring-db" {
-    allocated_storage            = 10
+    allocated_storage            = 20
     db_name                      = var.DB_NAME
     identifier                   = "c11-earthquake-monitoring-db"
     engine                       = "postgres"

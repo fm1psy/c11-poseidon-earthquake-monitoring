@@ -2,3 +2,4 @@ requests
 pytest
 pylint
 logging
+pytest-cov
