@@ -57,6 +57,7 @@ MAX_SIG = 1000
 MIN_SIG = 0
 MAX_GAP = 360.0
 MIN_GAP = 0.0
+CURRENT_TIME = datetime.now()
 
 def convert_epoch_to_utc(time_in_ms: int) -> datetime:
     """
@@ -126,7 +127,10 @@ def get_earthquake_id(data):
         return None
 
 def get_earthquake_data(data):
-    earthquake_id = get_earthquake_id(data)
+    """
+    Fetches each data point from the api, and returns it as a dictionary
+    """
+    earthquake_id = get_earthquake_id(data)  # validate_earthquake_naming
     alert = get_earthquake_property(data, 'alert')  #validate_property
     status = get_earthquake_property(data, 'status')  # validate_property
     network = get_earthquake_property(data, 'net')  # validate_property
@@ -136,19 +140,19 @@ def get_earthquake_data(data):
     lon = get_earthquake_geometry(data, 'lon')  # validate_reading
     lat = get_earthquake_geometry(data, 'lat')  # validate_reading
     depth = get_earthquake_geometry(data, 'depth')  # validate_reading
-    time = get_earthquake_property(data, 'time')  # TODO
-    felt = get_earthquake_property(data, 'felt')  # TODO
+    time = get_earthquake_property(data, 'time')  # convert_epoch_to_utc
+    felt = get_earthquake_property(data, 'felt')  # validate_inputs
     cdi = get_earthquake_property(data, 'cdi')  # validate_reading
     mmi = get_earthquake_property(data, 'mmi')  # validate_reading
     significance = get_earthquake_property(data, 'sig')  # validate_reading
-    nst = get_earthquake_property(data, 'nst')  # TODO
-    dmin = get_earthquake_property(data, 'dmin')  # TODO
+    nst = get_earthquake_property(data, 'nst')  # validate_inputs
+    dmin = get_earthquake_property(data, 'dmin')  # validate_dmin
     gap = get_earthquake_property(data, 'gap')  # validate_reading
-    title = get_earthquake_property(data, 'title') #TODO
+    title = get_earthquake_property(data, 'title') #validate_earthquake_naming
 
     return {
         'earthquake_id': earthquake_id,
-        'alert': validate_property(alert, 'alert'),
+        'alert': alert,
         'status': status,
         'network': network,
         'magtype': magtype,
@@ -167,6 +171,58 @@ def get_earthquake_data(data):
         'gap': gap,
         'title': title
     }
+
+
+def validate_earthquake_naming(name):
+
+    if not isinstance(name, str):
+        logging.error('Invalid data type: expected string')
+        return None
+
+    return name
+
+
+def convert_epoch_to_utc(time_in_ms: int) -> datetime:
+    """
+    Given epoch, it converts it into: DD/MM/YYYY HH:MM:SS
+    """
+    if not isinstance(time_in_ms, int):
+        logging.error('Invalid data type: expected int')
+        return CURRENT_TIME
+
+    recording_time = datetime.fromtimestamp(
+        time_in_ms / 1000, tz=timezone.utc)
+
+    if recording_time > CURRENT_TIME:
+        logging.error('Future earthquake can not be predicted')
+        return CURRENT_TIME
+
+    return recording_time.strftime("%d/%m/%Y %H:%M:%S")
+
+
+def validate_inputs(input):
+    if not isinstance(input, int):
+        logging.error('Invalid data type: expected int')
+        return None
+
+    if input < 0:
+        logging.error('{input} cannot be below 0')
+        return None
+
+    return input
+
+
+def validate_dmin(dmin):
+    if not isinstance(dmin, float):
+        logging.error('Invalid data type: expected int')
+        return None
+
+    if dmin < 0:
+        logging.error('dmin cannot be below 0')
+        return None
+
+    return dmin
+
 
 def validate_property(value, property):
     """
