@@ -9,7 +9,7 @@ TIME = "time"
 UPDATED = "updated"
 
 
-def get_time_from_epoch_time(time_in_ms: int) -> datetime:
+def get_time_from_epoch_time(time_in_ms: int) -> str:
     """Given epoch, it converts it to human-readable format"""
     if not isinstance(time_in_ms, int):
         raise TypeError("The input time_in_ms must be an integer.")
@@ -24,21 +24,21 @@ def get_time_from_epoch_time(time_in_ms: int) -> datetime:
 
 def get_all_earthquake_data(data_url: str) -> list[dict]:
     """Gets all earthquake data for the hour from USGS"""
-
     try:
         response = requests.get(data_url, timeout=30)
-        response.raise_for_status()
-        data = response.json()
-        if FEATURES not in data:
-            raise KeyError(f"Expected key '{
-                FEATURES}' not found in the response")
-        return data[FEATURES]
     except requests.exceptions.Timeout as e:
         print(f"Timeout occurred in get_all_earthquake_data: {e}")
         return []
     except requests.exceptions.RequestException as e:
         print(f"RequestException occurred in get_all_earthquake_data: {e}")
         return []
+
+    response.raise_for_status()
+    data = response.json()
+    if FEATURES not in data:
+        raise KeyError(f"Expected key '{
+            FEATURES}' not found in the response")
+    return data[FEATURES]
 
 
 def get_current_earthquake_data(all_earthquake_data: list[dict]) -> list[dict]:
@@ -53,6 +53,7 @@ def get_current_earthquake_data(all_earthquake_data: list[dict]) -> list[dict]:
                 if get_time_from_epoch_time(earthquake[PROPERTIES][TIME]) == current_time:
                     latest_earthquakes.append(earthquake)
             else:
+                print("Skipping data, keys are missing")
                 continue
         return latest_earthquakes
     except Exception as e:
@@ -67,5 +68,5 @@ def extract_process() -> list[dict]:
         relevant_data = get_current_earthquake_data(all_data)
         return relevant_data
     except Exception as e:
-        print("Error occurred in the extract process: " + e)
+        print(f"Error occurred in the extract process: {e}")
         return []
