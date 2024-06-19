@@ -36,8 +36,7 @@ def get_all_earthquake_data(data_url: str) -> list[dict]:
     response.raise_for_status()
     data = response.json()
     if FEATURES not in data:
-        raise KeyError(f"Expected key '{
-            FEATURES}' not found in the response")
+        raise KeyError(f"Expected key '{FEATURES}' not found in the response")
     return data[FEATURES]
 
 
