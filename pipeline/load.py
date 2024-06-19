@@ -48,8 +48,26 @@ def get_all_statuses(cursor: cursor) -> list:
     return formatted_statuses
 
 
+def get_all_magtypes(cursor: cursor) -> list:
+    """Gets all magTypes in RDS"""
+    formatted_magtypes = {}
+    cursor.execute("""SELECT * FROM magtypes;""")
+    magtypes = cursor.fetchall()
+    for magtype in magtypes:
+        formatted_magtypes[magtype["magtype_value"]] = magtype["magtype_id"]
+    return formatted_magtypes
+
+
+def get_all_types(cursor: cursor) -> list:
+    """Gets all types in RDS"""
+    formatted_types = {}
+    cursor.execute("""SELECT * FROM types;""")
+    types = cursor.fetchall()
+    for type in types:
+        formatted_types[type["type_value"]] = type["type_id"]
+    return formatted_types
+
+
 if __name__ == "__main__":
     con = get_connection(DB_HOST, DB_NAME, DB_USERNAME, DB_PASSWORD, DB_PORT)
     cur = get_cursor(con)
-    print(get_all_networks(cur))
-    print(get_all_statuses(cur))
