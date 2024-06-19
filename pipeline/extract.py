@@ -69,4 +69,4 @@ def extract_process() -> list[dict]:
         return relevant_data
     except Exception as e:
         print(f"Error occurred in the extract process: {e}")
-        return []
+        return relevant_data
