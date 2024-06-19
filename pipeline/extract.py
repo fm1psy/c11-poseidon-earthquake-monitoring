@@ -1,12 +1,12 @@
 """This file is responsible for downloading the latest earthquake data"""
 import datetime
+
 import requests
 
 URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson"
 FEATURES = "features"
 PROPERTIES = "properties"
 TIME = "time"
-UPDATED = "updated"
 
 
 def get_time_from_epoch_time(time_in_ms: int) -> str:
