@@ -98,3 +98,18 @@ def test_get_earthquake_geometry_missing_depth(example_reading_missing_depth, ca
 def test_get_earthquake_geometry_random_error():
     with pytest.raises(Exception):
         get_earthquake_geometry()
+
+
+def test_get_earthquake_id_valid(example_reading):
+    assert get_earthquake_id(example_reading) == 'ci40801680'
+
+
+def test_get_earthquake_id_missing_id(empty_reading, caplog):
+    with caplog.at_level(logging.ERROR):
+        assert get_earthquake_id(empty_reading) == None
+        assert 'Missing earthquake id' in caplog.messages
+
+
+def test_get_earthquake_id_random_error():
+    with pytest.raises(Exception):
+        get_earthquake_id()
