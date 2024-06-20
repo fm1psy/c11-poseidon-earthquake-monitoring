@@ -339,9 +339,3 @@ def transform_process(extracted_data: list[dict]) -> list[dict]:
                         format='%(asctime)s - %(levelname)s - %(message)s')
     latest_data = [get_earthquake_data(data)for data in extracted_data]
     return [clean_data(data) for data in latest_data]
-
-
-if __name__ == "__main__":
-    for i in transform_process(extract2.extract_process()):
-        print(i)
-        print('\n')
