@@ -280,3 +280,23 @@ def test_validate_types(eq_type, eq_type_name, expected_value):
 def test_validate_types_invalid_data_type(caplog):
     assert validate_types(['ml'], 'magtype') == None
     assert 'Invalid data type: expected a string for magtype' in caplog.messages
+
+
+@pytest.mark.parametrize("network, expected_value", [
+    (12, None),
+    ('werewr', None),
+    ('uu', 'uu'),
+    (['aa'], None),
+])
+def test_validate_network(network, expected_value):
+    assert validate_network(network) == expected_value
+
+
+def test_validate_network_invalid_data_type(caplog):
+    assert validate_network(['uu']) == None
+    assert 'Invalid data type for network: expected a string' in caplog.messages
+
+
+def test_validate_network_invalid_length(caplog):
+    assert validate_network('abc') == None
+    assert 'Invalid length for network: expected 2' in caplog.messages
