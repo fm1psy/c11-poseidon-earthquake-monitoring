@@ -71,7 +71,7 @@ resource "aws_lambda_function" "reporting_lambda" {
     function_name = "poseidon-weekly-reporting"
     role = aws_iam_role.pipeline_lambda_role.arn
     package_type = "Image"
-    image_uri = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/vodnik-pipeline:latest"
+    image_uri = "" # TO FILL
     architectures = ["x86_64"]
     timeout = 45
     environment {
