@@ -354,19 +354,79 @@ def test_validate_property_invalid_status(caplog):
     (180.0, 'lon', 180.0),
     (49, 'lat', 49),
     (-20.1, 'lat', -20.1),
-    (, 'depth', 6.3),
-    (6.3, 'cdi', 6.3),
+    (233, 'depth', 233),
+    (2.3, 'cdi', 2.3),
     (6.3, 'mmi', 6.3),
-    (6.3, 'mmi', 6.3),
-    (6.3, 'sig', 6.3),
-    (6.3, 'gap', 6.3),
-    (6.3, 'mag', 6.3),
-    (6.3, 'mag', 6.3),
-    (6.3, 'mag', 6.3),
-    (6.3, 'mag', 6.3),
-    (6.3, 'mag', 6.3),
-    (6.3, 'mag', 6.3),
+    (0, 'mmi', 0),
+    (323, 'sig', 323),
+    (96.2, 'gap', 96.2),
+    ('10', 'mag', None),
+    (190, 'lon', None),
+    (91, 'lat', None),
+    ('289', 'depth', None),
+    (13, 'cdi', None),
+    ([3.9], 'mag', None),
 
 ])
 def test_validate_reading(reading, reading_type, expected_value):
     assert validate_reading(reading, reading_type) == expected_value
+
+
+def test_validate_reading_missing_value(caplog):
+    assert validate_reading(None, 'mmi') == None
+    assert 'No recorded value for "mmi"' in caplog.messages
+
+
+@pytest.mark.parametrize("reading, reading_type, expected_value", [
+    ([6.4], 'mag', None),
+    ({'sig': 299}, 'sig', None),
+    ('33', 'lat', None),
+    ((1, 57), 'lon', None),
+])
+def test_validate_reading_invalid_format(reading, reading_type, expected_value, caplog):
+    assert validate_reading(reading, reading_type) == expected_value
+    assert f'Invalid data type: expected a number for "{reading_type}"' in caplog.messages
+
+
+@pytest.mark.parametrize("reading, reading_type, expected_value", [
+    (11, 'mag', None),
+    (-20, 'mag', None),
+    (-197.2378, 'lon', None),
+    (180.1, 'lon', None),
+    (900, 'lat', None),
+    (-220.1, 'lat', None),
+    (1223, 'depth', None),
+    (13.9, 'cdi', None),
+    (-0.01, 'mmi', None),
+    (19, 'mmi', None),
+    (-1, 'sig', None),
+    (361, 'gap', None),
+])
+def test_validate_reading_invalid_range(reading, reading_type, expected_value, caplog):
+    assert validate_reading(reading, reading_type) == expected_value
+    expected_message = f'"{reading_type}" value {reading} out of range.'
+    assert any(expected_message in message for message in caplog.messages)
+
+
+def test_clean_data(example_reading):
+    assert get_earthquake_data(example_reading) == {
+        'earthquake_id': 'ci40801680',
+        'alert': 'red',
+        'status': 'reviewed',
+        'network': 'ci',
+        'magtype': 'ml',
+        'earthquake_type': 'earthquake',
+        'magnitude': 0.67,
+        'lon': -117.542,
+        'lat': 35.7305,
+        'depth': 1.88,
+        'time': 1718718656830,
+        'felt': None,
+        'cdi': 5.6,
+        'mmi': 6.0,
+        'significance': 7,
+        'nst': 17,
+        'dmin': 0.1163,
+        'gap': 146,
+        'title': 'M 0.7 - 13 km WSW of Searles Valley, CA'
+    }

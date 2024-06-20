@@ -274,7 +274,7 @@ def validate_reading(reading: float | int, reading_type: str) -> None | float | 
     magnitude, longitude, latitude, depth, cdi, mmi, sig and gap
     """
     if reading is None:
-        logging.error('No recorded value')
+        logging.error(f'No recorded value for "{reading_type}"')
         return None
 
     reading_types = {
@@ -292,7 +292,7 @@ def validate_reading(reading: float | int, reading_type: str) -> None | float | 
     min_value = reading_types[reading_type][1]
 
     if not isinstance(reading, (float, int)):
-        logging.error('Invalid data type: expected a number')
+        logging.error(f'Invalid data type: expected a number for "{reading_type}"')
         return None
 
     if not min_value <= reading <= max_value:
