@@ -5,7 +5,7 @@ import logging
 @pytest.mark.parametrize("property_name, expected_value", [
     ('mag', 0.67),
     ('time', 1718718656830),
-    ('felt', 23),
+    ('felt', None),
     ('cdi', 5.6),
     ('mmi', 6.0),
     ('alert','red'),
@@ -48,3 +48,53 @@ def test_get_earthquake_property_missing_data(empty_reading, caplog):
 def test_get_earthquake_property_random_error():
     with pytest.raises(Exception):
         get_earthquake_property()
+
+
+@pytest.mark.parametrize("geometry_param, expected_value", [
+    ('lon', -117.542),
+    ('lat', 35.7305),
+    ('depth', 1.88),
+])
+def test_get_earthquake_geometry_valid(example_reading, geometry_param, expected_value):
+    assert get_earthquake_geometry(
+        example_reading, geometry_param) == expected_value
+
+
+def test_get_earthquake_geometry_missing_geometry(empty_reading, caplog):
+    with caplog.at_level(logging.ERROR):
+        assert get_earthquake_geometry(
+            empty_reading, 'lon') == None
+        assert 'Missing earthquake geometry' in caplog.messages
+
+
+def test_get_earthquake_geometry_missing_coordinates(example_reading_missing_coordinates, caplog):
+    with caplog.at_level(logging.ERROR):
+        assert get_earthquake_geometry(
+            example_reading_missing_coordinates, 'long') == None
+        assert 'Missing earthquake geometry coordinates' in caplog.messages
+
+
+@pytest.mark.parametrize("geometry_param, expected_value", [
+    ('lon', -117.542),
+    ('non_existent_property', None),
+])
+def test_get_get_earthquake_geometry_invalid_parameter(example_reading_missing_values, geometry_param, expected_value, caplog):
+    with caplog.at_level(logging.ERROR):
+        assert get_earthquake_geometry(
+            example_reading_missing_values, geometry_param) == expected_value
+        if expected_value is None:
+            assert 'Invalid geometry parameter: non_existent_property' in caplog.messages
+        else:
+            assert not caplog.messages
+
+
+def test_get_earthquake_geometry_missing_depth(example_reading_missing_depth, caplog):
+    with caplog.at_level(logging.ERROR):
+        assert get_earthquake_geometry(
+            example_reading_missing_depth, 'lon') == None
+        assert 'Earthquake geometry coordinates missing either lon/lat/depth' in caplog.messages
+
+
+def test_get_earthquake_geometry_random_error():
+    with pytest.raises(Exception):
+        get_earthquake_geometry()

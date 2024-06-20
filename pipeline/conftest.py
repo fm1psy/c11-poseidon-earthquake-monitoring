@@ -259,7 +259,7 @@ def example_reading():
                                       'tz': None,
                                       'url': 'https://earthquake.usgs.gov/earthquakes/eventpage/ci40801680',
                                       'detail': 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/ci40801680.geojson',
-                                      'felt': 23,
+                                      'felt': None,
                                       'cdi': 5.6,
                                       'mmi': 6.0,
                                       'alert': 'red',
@@ -325,4 +325,83 @@ def example_reading_missing_values():
 @pytest.fixture
 def empty_reading():
     return {
+    }
+
+
+@pytest.fixture
+def example_reading_missing_coordinates():
+    return {
+        'type': 'Feature',
+        'properties': {
+            'mag': 0.67,
+            'place': '13 km WSW of Searles Valley, CA',
+            'time': 1718718656830,
+            'updated': 1718720255694,
+            'tz': None,
+            'url': 'https://earthquake.usgs.gov/earthquakes/eventpage/ci40801680',
+            'detail': 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/ci40801680.geojson',
+            'felt': None,
+            'cdi': None,
+            'mmi': None,
+            'alert': None,
+            'status': 'reviewed',
+            'tsunami': 0,
+            'sig': 7,
+            'net': 'ci',
+            'code': '40801680',
+            'ids': ',ci40801680,',
+            'sources': ',ci,',
+            'types': ',nearby-cities,origin,phase-data,scitech-link,',
+            'nst': 17,
+            'dmin': 0.1163,
+            'rms': 0.13,
+            'gap': 146,
+            'magType': 'ml',
+            'type': 'earthquake',
+            'title': 'M 0.7 - 13 km WSW of Searles Valley, CA'
+        },
+        'geometry': {
+            'type': 'Point'
+        },
+        'id': 'ci40801680'
+    }
+
+
+@pytest.fixture
+def example_reading_missing_depth():
+    return {
+        'type': 'Feature',
+        'properties': {
+            'mag': 0.67,
+            'place': '13 km WSW of Searles Valley, CA',
+            'time': 1718718656830,
+            'updated': 1718720255694,
+            'tz': None,
+            'url': 'https://earthquake.usgs.gov/earthquakes/eventpage/ci40801680',
+            'detail': 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/ci40801680.geojson',
+            'felt': None,
+            'cdi': None,
+            'mmi': None,
+            'alert': None,
+            'status': 'reviewed',
+            'tsunami': 0,
+            'sig': 7,
+            'net': 'ci',
+            'code': '40801680',
+            'ids': ',ci40801680,',
+            'sources': ',ci,',
+            'types': ',nearby-cities,origin,phase-data,scitech-link,',
+            'nst': 17,
+            'dmin': 0.1163,
+            'rms': 0.13,
+            'gap': 146,
+            'magType': 'ml',
+            'type': 'earthquake',
+            'title': 'M 0.7 - 13 km WSW of Searles Valley, CA'
+        },
+        'geometry': {
+            'type': 'Point',
+            'coordinates': [-117.542, 35.7305]
+        },
+        'id': 'ci40801680'
     }
