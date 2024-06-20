@@ -113,3 +113,27 @@ def test_get_earthquake_id_missing_id(empty_reading, caplog):
 def test_get_earthquake_id_random_error():
     with pytest.raises(Exception):
         get_earthquake_id()
+
+
+def test_get_earthquake_data(example_reading):
+    assert get_earthquake_data(example_reading) == {
+        'earthquake_id': 'ci40801680',
+        'alert': 'red',
+        'status': 'reviewed',
+        'network': 'ci',
+        'magtype': 'ml',
+        'earthquake_type': 'earthquake',
+        'magnitude': 0.67,
+        'lon': -117.542,
+        'lat': 35.7305,
+        'depth': 1.88,
+        'time': 1718718656830,
+        'felt': None,
+        'cdi': 5.6,
+        'mmi': 6.0,
+        'significance': 7,
+        'nst': 17,
+        'dmin': 0.1163,
+        'gap': 146,
+        'title': 'M 0.7 - 13 km WSW of Searles Valley, CA'
+    }
