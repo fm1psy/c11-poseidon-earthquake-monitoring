@@ -60,7 +60,7 @@ resource "aws_iam_policy" "scheduler_execute_reporting_policy" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "scheduler_pipeline_lambda_invoke_policy" {
+resource "aws_iam_role_policy_attachment" "scheduler_reporting_lambda_invoke_policy" {
   role       = aws_iam_role.reporting_scheduler_role.name
   policy_arn = aws_iam_policy.scheduler_execute_reporting_policy.arn
 }
