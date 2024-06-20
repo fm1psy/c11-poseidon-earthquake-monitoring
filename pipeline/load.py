@@ -19,6 +19,8 @@ DB_NAME = os.getenv('DB_NAME')
 DB_USERNAME = os.getenv('DB_USERNAME')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_PORT = os.getenv('DB_PORT')
+ALERT = "alert"
+STATUS = "status"
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s %(levelname)s %(message)s")
@@ -33,10 +35,10 @@ def get_connection(host: str, name: str, user: str, password: str, port: str) ->
         return conn
     except OperationalError as e:
         logging.error(
-            "OperationalError occurred while trying to connect to the database: %s", e)
+            f"OperationalError occurred while trying to connect to the database: {e}")
         return None
     except Exception as e:
-        logging.error("An unexpected error occurred: %s", e)
+        logging.error(f"An unexpected error occurred: {e}")
         return None
 
 
@@ -49,320 +51,161 @@ def get_cursor(conn: connection) -> cursor:
         return cursor
     except OperationalError as e:
         logging.error(
-            "OperationalError occurred while trying to create a cursor: %s", e)
+            f"OperationalError occurred while trying to create a cursor: {e}")
         return None
     except Exception as e:
-        logging.error("An unexpected error occurred: %s", e)
+        logging.error(f"An unexpected error occurred: {e}")
         return None
+
+
+def execute_query(cursor: cursor, query: str) -> list:
+    """Executes a query and returns the results."""
+    try:
+        cursor.execute(query)
+        return cursor.fetchall()
+    except OperationalError as e:
+        logging.error(f"OperationalError occurred while executing query: {e}")
+    except Exception as e:
+        logging.error(f"An unexpected error occurred: {e}")
+    return None
+
+
+def execute_insert(conn: connection, cursor: cursor, query: str, args: tuple) -> int:
+    """Executes an insert query and returns the new ID"""
+    try:
+        cursor.execute(query, args)
+        new_id = cursor.fetchone()[0]
+        conn.commit()
+        return new_id
+    except (psycopg2.IntegrityError, psycopg2.OperationalError, psycopg2.DatabaseError) as e:
+        logging.error(f"Database error: {e}")
+        conn.rollback()
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        conn.rollback()
+    return None
+
+
+def fetch_all(cursor: cursor, table: str, key_field: str, value_field: str) -> dict:
+    """Gets all records from a given table and returns a dictionary"""
+    logging.info(f"Fetching all values from {table}")
+    query = f"SELECT * FROM {table};"
+    results = execute_query(cursor, query)
+    return {record[key_field]: record[value_field] for record in results} if results else {}
 
 
 def get_all_alerts(cursor: cursor) -> dict:
-    """Gets all alerts in RDS"""
-    formatted_alerts = {}
-
-    try:
-        logging.info("Retrieving all alerts from RDS")
-        cursor.execute("""SELECT * FROM alerts;""")
-        alerts = cursor.fetchall()
-        for alert in alerts:
-            formatted_alerts[alert["alert_value"]] = alert["alert_id"]
-        logging.info("Successfully fetched and formatted alerts")
-    except OperationalError as e:
-        logging.error(
-            "OperationalError occurred while fetching networks: %s", e)
-        return formatted_alerts
-    except Exception as e:
-        logging.error("An unexpected error occurred: %s", e)
-        return formatted_alerts
-
-    return formatted_alerts
+    "Fetches all alert values from RDS"
+    return fetch_all(cursor, "alerts", "alert_value", "alert_id")
 
 
 def get_all_networks(cursor: cursor) -> dict:
-    """Gets all networks in RDS"""
-    formatted_networks = {}
-
-    try:
-        logging.info("Retrieving all networks from RDS")
-        cursor.execute("""SELECT * FROM networks;""")
-        networks = cursor.fetchall()
-        for network in networks:
-            formatted_networks[network["network_name"]] = network["network_id"]
-        logging.info("Successfully fetched and formatted networks")
-    except OperationalError as e:
-        logging.error(
-            "OperationalError occurred while fetching networks: %s", e)
-        return formatted_networks
-    except Exception as e:
-        logging.error("An unexpected error occurred: %s", e)
-        return formatted_networks
-
-    return formatted_networks
+    "Fetches all network values from RDS"
+    return fetch_all(cursor, "networks", "network_name", "network_id")
 
 
 def get_all_statuses(cursor: cursor) -> dict:
-    """Gets all statuses in RDS"""
-    formatted_statuses = {}
-
-    try:
-        logging.info("Retrieving all statuses from RDS")
-        cursor.execute("""SELECT * FROM statuses;""")
-        statuses = cursor.fetchall()
-        for status in statuses:
-            formatted_statuses[status["status"]] = status["status_id"]
-        logging.info("Successfully fetched and formatted statuses")
-    except OperationalError as e:
-        logging.error(
-            "OperationalError occurred while fetching networks: %s", e)
-        return formatted_statuses
-    except Exception as e:
-        logging.error("An unexpected error occurred: %s", e)
-        return formatted_statuses
-
-    return formatted_statuses
+    "Fetches all statuses from RDS"
+    return fetch_all(cursor, "statuses", STATUS, "status_id")
 
 
 def get_all_magtypes(cursor: cursor) -> dict:
-    """Gets all magTypes in RDS"""
-    formatted_magtypes = {}
-
-    try:
-        logging.info("Retrieving all magTypes from RDS")
-        cursor.execute("""SELECT * FROM magtypes;""")
-        magtypes = cursor.fetchall()
-        for magtype in magtypes:
-            formatted_magtypes[magtype["magtype_value"]
-                               ] = magtype["magtype_id"]
-        logging.info("Successfully fetched and formatted magTypes")
-    except OperationalError as e:
-        logging.error(
-            "OperationalError occurred while fetching networks: %s", e)
-        return formatted_magtypes
-    except Exception as e:
-        logging.error("An unexpected error occurred: %s", e)
-        return formatted_magtypes
-
-    return formatted_magtypes
+    "Fetches all magtypes values from RDS"
+    return fetch_all(cursor, "magtypes", "magtype_value", "magtype_id")
 
 
 def get_all_types(cursor: cursor) -> dict:
-    """Gets all types in RDS"""
-    formatted_types = {}
+    "Fetches all earthquake types from RDS"
+    return fetch_all(cursor, "types", "type_value", "type_id")
 
+
+def get_or_add_id(value: str, all_items: dict, add_to_db_function) -> int:
+    """Retrieves the ID for a given value, adding it to the database if not present"""
+    if value in all_items:
+        return all_items[value]
+    new_id = add_to_db_function(value)
+    if new_id is not None:
+        all_items[value] = new_id
+    return new_id
+
+
+def add_network_to_db(conn: connection, cursor: cursor, network_value: str) -> int:
+    """Adds the network value to the RDS"""
+    query = """INSERT INTO networks (network_name) VALUES (%s) RETURNING network_id"""
+    return execute_insert(conn, cursor, query, (network_value,))
+
+
+def get_network_id(conn: connection, cursor: cursor, network_value: str, all_networks: dict) -> int:
+    """Gets the network_id for the provided network"""
+    return get_or_add_id(network_value, all_networks, lambda value_to_add: add_network_to_db(conn, cursor, value_to_add))
+
+
+def add_magtype_to_db(conn: connection, cursor: cursor, magtype_value: str) -> int:
+    """Adds the magType value to the RDS"""
+    query = """INSERT INTO magtypes (magtype_value) VALUES (%s) RETURNING magtype_id"""
+    return execute_insert(conn, cursor, query, (magtype_value,))
+
+
+def get_magtype_id(conn: connection, cursor: cursor, magtype_value: str, all_magtypes: dict) -> int:
+    """Gets the magtype_id for the provided magType value"""
+    return get_or_add_id(magtype_value, all_magtypes, lambda value_to_add: add_magtype_to_db(conn, cursor, value_to_add))
+
+
+def add_type_to_db(conn: connection, cursor: cursor, earthquake_type: str) -> int:
+    """Adds the earthquake type to the RDS"""
+    query = """INSERT INTO types (type_value) VALUES (%s) RETURNING type_id"""
+    return execute_insert(conn, cursor, query, (earthquake_type,))
+
+
+def get_type_id(conn: connection, cursor: cursor, earthquake_type: str, all_types: dict) -> int:
+    """Gets the type_id for the provided earthquake type value"""
+    return get_or_add_id(earthquake_type, all_types, lambda value_to_add: add_type_to_db(conn, cursor, value_to_add))
+
+
+def add_earthquake_data_to_rds(conn: connection, cursor: cursor, earthquake_data: list[dict], all_alerts: dict, all_statuses: dict, all_networks: dict, all_magtypes: dict, all_types: dict) -> None:
+    """Adds the provided data to the 'earthquakes' table"""
     try:
-        logging.info("Retrieving all types from RDS")
-        cursor.execute("""SELECT * FROM types;""")
-        types = cursor.fetchall()
-        for earthquake_type in types:
-            formatted_types[earthquake_type["type_value"]
-                            ] = earthquake_type["type_id"]
-        logging.info("Successfully fetched and formatted types")
-    except OperationalError as e:
-        logging.error(
-            "OperationalError occurred while fetching networks: %s", e)
-        return formatted_types
-    except Exception as e:
-        logging.error("An unexpected error occurred: %s", e)
-        return formatted_types
+        for earthquake in earthquake_data:
+            alert_id = all_alerts.get(earthquake.get(ALERT))
+            status_id = all_statuses.get(earthquake["status"])
+            network_id = get_network_id(
+                conn, cursor, earthquake["network"], all_networks)
+            magtype_id = get_magtype_id(
+                conn, cursor, earthquake["magtype"], all_magtypes)
+            type_id = get_type_id(
+                conn, cursor, earthquake["earthquake_type"], all_types)
 
-    return formatted_types
+            cursor.execute("""INSERT INTO earthquakes (earthquake_id, alert_id, status_id, network_id, magtype_id, type_id, magnitude, lon, lat, depth, time, felt, cdi, mmi, significance, nst, dmin, gap, title)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (earthquake["earthquake_id"], alert_id, status_id, network_id, magtype_id, type_id,
+                                  earthquake["magnitude"], earthquake["lon"], earthquake["lat"], earthquake["depth"],
+                                  earthquake["time"], earthquake["felt"], earthquake["cdi"], earthquake["mmi"],
+                                  earthquake["significance"], earthquake["nst"], earthquake["dmin"], earthquake["gap"], earthquake["title"]))
 
-
-def add_network_to_db(conn: connection, cursor: cursor, network_value: str) -> int | None:
-    """Adds provided network value to the RDS"""
-    try:
-        logging.info(f"Adding {network_value} to RDS")
-        cursor.execute(
-            """INSERT INTO networks (network_name) VALUES (%s) RETURNING network_id""", (network_value))
-        new_id = cursor.fetchone()[0]
-        conn.commit()
-        logging.info(f"Added {network_value} to RDS")
-        return new_id
-    except psycopg2.IntegrityError as e:
-        logging.error(f"Integrity error: {e}")
-        conn.rollback()
-        return None
-    except psycopg2.OperationalError as e:
-        logging.error(f"Operational error: {e}")
-        conn.rollback()
-        return None
-    except psycopg2.DatabaseError as e:
+            conn.commit()
+            logging.info(f"Successfully added earthquake {
+                         earthquake['earthquake_id']} to the database")
+    except (psycopg2.IntegrityError, psycopg2.OperationalError, psycopg2.DatabaseError) as e:
         logging.error(f"Database error: {e}")
         conn.rollback()
-        return None
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
         conn.rollback()
-        return None
-
-
-def get_network_id(network_value: str, all_networks: dict) -> int | None:
-    """Retrieves the associated network_id for a given network_value"""
-    try:
-        logging.info(f"Retrieving network_id for {network_value}")
-        if network_value in all_networks:
-            return all_networks[network_value]
-
-        logging.info(f"network_name not present in database")
-        new_id = add_network_to_db(network_value)
-
-        if new_id is None:
-            raise ValueError(f"Failed to add network {
-                             network_value} to the database")
-
-        all_networks[network_value] = new_id
-        return new_id
-    except KeyError as e:
-        logging.error(f"Key error: {e}")
-    except ValueError as e:
-        logging.error(e)
-    except Exception as e:
-        logging.error(f"Unexpected error: {e}")
-
-    return None
-
-
-def add_magtype_to_db(conn: connection, cursor: cursor, magtype_value: str) -> int | None:
-    """Adds provided magtype value to the RDS"""
-    try:
-        logging.info(f"Adding {magtype_value} to RDS")
-        cursor.execute(
-            """INSERT INTO magtypes (magtype_value) VALUES (%s) RETURNING magtype_id""", (magtype_value))
-        new_id = cursor.fetchone()[0]
-        conn.commit()
-        logging.info(f"Added {magtype_value} to RDS")
-        return new_id
-    except psycopg2.IntegrityError as e:
-        logging.error(f"Integrity error: {e}")
-        conn.rollback()
-        return None
-    except psycopg2.OperationalError as e:
-        logging.error(f"Operational error: {e}")
-        conn.rollback()
-        return None
-    except psycopg2.DatabaseError as e:
-        logging.error(f"Database error: {e}")
-        conn.rollback()
-        return None
-    except Exception as e:
-        logging.error(f"Unexpected error: {e}")
-        conn.rollback()
-        return None
-
-
-def get_magtype_id(magtype_value: str, all_magtypes: dict) -> int | None:
-    """Retrieves the associated network_id for a given network_value"""
-    try:
-        logging.info(f"Retrieving magtype_id for {magtype_value}")
-        if magtype_value in all_magtypes:
-            return all_magtypes[magtype_value]
-
-        logging.info(f"network_name not present in database")
-        new_id = add_network_to_db(magtype_value)
-
-        if new_id is None:
-            raise ValueError(f"Failed to add network {
-                             magtype_value} to the database")
-
-        all_magtypes[magtype_value] = new_id
-        return new_id
-    except KeyError as e:
-        logging.error(f"Key error: {e}")
-    except ValueError as e:
-        logging.error(e)
-    except Exception as e:
-        logging.error(f"Unexpected error: {e}")
-
-    return None
-
-
-def add_type_to_db(conn: connection, cursor: cursor, earthquake_type: str) -> int | None:
-    """Adds provided earthquake type value to the RDS"""
-    try:
-        logging.info(f"Adding {earthquake_type} to RDS")
-        cursor.execute(
-            """INSERT INTO types (type_value) VALUES (%s) RETURNING type_id""", (earthquake_type))
-        new_id = cursor.fetchone()[0]
-        conn.commit()
-        logging.info(f"Added {earthquake_type} to RDS")
-        return new_id
-    except psycopg2.IntegrityError as e:
-        logging.error(f"Integrity error: {e}")
-        conn.rollback()
-        return None
-    except psycopg2.OperationalError as e:
-        logging.error(f"Operational error: {e}")
-        conn.rollback()
-        return None
-    except psycopg2.DatabaseError as e:
-        logging.error(f"Database error: {e}")
-        conn.rollback()
-        return None
-    except Exception as e:
-        logging.error(f"Unexpected error: {e}")
-        conn.rollback()
-        return None
-
-
-def get_type_id(earthquake_type: str, all_types: dict) -> int | None:
-    """Retrieves the associated network_id for a given network_value"""
-    try:
-        logging.info(f"Retrieving magtype_id for {earthquake_type}")
-        if earthquake_type in all_types:
-            return all_types[earthquake_type]
-
-        logging.info(f"network_name not present in database")
-        new_id = add_network_to_db(earthquake_type)
-
-        if new_id is None:
-            raise ValueError(f"Failed to add network {
-                             earthquake_type} to the database")
-
-        all_types[earthquake_type] = new_id
-        return new_id
-    except KeyError as e:
-        logging.error(f"Key error: {e}")
-    except ValueError as e:
-        logging.error(e)
-    except Exception as e:
-        logging.error(f"Unexpected error: {e}")
-
-    return None
-
-
-def add_earthquake_data_to_rds(conn: connection, cursor: cursor, earthquake_data: list[dict], all_alerts: dict, all_statuses: dict, all_networks: dict, all_magtypes, all_types) -> None:
-    for earthquake in earthquake_data:
-        if earthquake["alert"]:
-            alert_id = all_alerts[earthquake["alert"]]
-        else:
-            alert_id = None
-        status_id = all_statuses[earthquake["status"]]
-        network_id = get_network_id(earthquake_data["network"], all_networks)
-        magtype_id = get_magtype_id(earthquake_data["magtype"], all_magtypes)
-        type_id = get_type_id(earthquake_data["earthquake_type"], all_types)
-
-        cursor.execute("""INSERT INTO earthquakes (earthquake_id, alert_id, status_id, network_id, magtype_id, type_id, magnitude, lon, lat, depth, time, felt, cdi, mmi, significance, nst, dmin, gap, title)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (earthquake["earthquake_id"], alert_id, status_id, network_id, magtype_id, type_id,
-                          earthquake["magnitude"], earthquake["lon"], earthquake["lat"], earthquake["depth"],
-                          earthquake["time"], earthquake["felt"], earthquake["cdi"], earthquake["mmi"],
-                          earthquake["significance]"], earthquake["nst"], earthquake["dmin"], earthquake["gap"], earthquake["title"]))
-
-        conn.commit()
 
 
 if __name__ == "__main__":
     all_data = extract_process()
     transformed_data = transform_process(all_data)
 
-    con = get_connection(DB_HOST, DB_NAME, DB_USERNAME, DB_PASSWORD, DB_PORT)
-    cur = get_cursor(con)
+    conn = get_connection(DB_HOST, DB_NAME, DB_USERNAME, DB_PASSWORD, DB_PORT)
+    if conn:
+        cur = get_cursor(conn)
+        if cur:
+            all_alerts = get_all_alerts(cur)
+            all_networks = get_all_networks(cur)
+            all_statuses = get_all_statuses(cur)
+            all_magtypes = get_all_magtypes(cur)
+            all_types = get_all_types(cur)
 
-    all_alerts = get_all_alerts(cur)
-    all_networks = get_all_networks(cur)
-    all_statuses = get_all_statuses(cur)
-    all_magtypes = get_all_magtypes(cur)
-    all_types = get_all_types(cur)
-
-    add_earthquake_data_to_rds(
-        con, cur, transformed_data, all_alerts, all_statuses, all_networks, all_magtypes, all_types)
+            add_earthquake_data_to_rds(
+                conn, cur, transformed_data, all_alerts, all_statuses, all_networks, all_magtypes, all_types)

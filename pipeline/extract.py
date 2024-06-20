@@ -45,14 +45,15 @@ def get_all_earthquake_data(data_url: str) -> list[dict]:
 def get_current_earthquake_data(all_earthquake_data: list[dict]) -> list[dict]:
     """Gets all the most recent earthquakes from data"""
     try:
-        current_time = datetime.datetime.now(
-            tz=datetime.timezone.utc).strftime("%H:%M")
+        time_to_compare_to = datetime.datetime.now(
+            tz=datetime.timezone.utc) - datetime.timedelta(minutes=1)
+        time_to_compare_to_formatted = time_to_compare_to.strftime("%H:%M")
         latest_earthquakes = []
 
         for earthquake in all_earthquake_data:
             if PROPERTIES in earthquake and TIME in earthquake[PROPERTIES]:
-                if get_time_from_epoch_time(earthquake[PROPERTIES][TIME]) == current_time:
-                    latest_earthquakes.append(earthquake)
+                # if get_time_from_epoch_time(earthquake[PROPERTIES][TIME]) == time_to_compare_to_formatted or get_time_from_epoch_time(earthquake[PROPERTIES]["updated"]) == time_to_compare_to_formatted:
+                latest_earthquakes.append(earthquake)
             else:
                 print("Skipping data, keys are missing")
                 continue
@@ -71,3 +72,7 @@ def extract_process() -> list[dict]:
     except Exception as e:
         print(f"Error occurred in the extract process: {e}")
         return relevant_data
+
+
+if __name__ == "__main__":
+    print(extract_process())
