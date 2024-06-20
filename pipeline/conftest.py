@@ -420,7 +420,7 @@ def example_erroneous_reading():
         'properties': {
             'mag': 0.67,
             'place': '13 km WSW of Searles Valley, CA',
-            'time': 171871865683077,
+            'time': 33109056003843,
             'updated': 1718720255694,
             'tz': None,
             'url': 'https://earthquake.usgs.gov/earthquakes/eventpage/ci40801680',
@@ -449,5 +449,5 @@ def example_erroneous_reading():
             'type': 'Point',
             'coordinates': [-1907.542, 35.7305, -1000]
         },
-        'id': 'ci40801680'
+        'id': 'c3820fd332'
     }

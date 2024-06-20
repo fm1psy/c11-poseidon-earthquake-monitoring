@@ -408,25 +408,73 @@ def test_validate_reading_invalid_range(reading, reading_type, expected_value, c
     assert any(expected_message in message for message in caplog.messages)
 
 
-def test_clean_data(example_reading):
-    assert get_earthquake_data(example_reading) == {
-        'earthquake_id': 'ci40801680',
-        'alert': 'red',
+def test_clean_data(example_erroneous_reading, get_current_utc_time):
+    assert clean_data(get_earthquake_data(example_erroneous_reading)) == {
+        'earthquake_id': 'c3820fd332',
+        'alert': None,
         'status': 'reviewed',
         'network': 'ci',
         'magtype': 'ml',
         'earthquake_type': 'earthquake',
         'magnitude': 0.67,
-        'lon': -117.542,
+        'lon': None,
         'lat': 35.7305,
-        'depth': 1.88,
-        'time': 1718718656830,
+        'depth': None,
+        'time': get_current_utc_time,
         'felt': None,
-        'cdi': 5.6,
-        'mmi': 6.0,
+        'cdi': None,
+        'mmi': None,
         'significance': 7,
-        'nst': 17,
+        'nst': None,
         'dmin': 0.1163,
         'gap': 146,
         'title': 'M 0.7 - 13 km WSW of Searles Valley, CA'
     }
+
+
+def test_transform_process(example_reading, example_erroneous_reading, get_current_utc_time):
+    readings = [example_reading, example_erroneous_reading]
+    assert (transform_process(readings)) == [
+         {
+            'alert': 'red',
+            'cdi': 5.6,
+            'depth': 1.88,
+            'dmin': 0.1163,
+            'earthquake_id': 'ci40801680',
+            'earthquake_type': 'earthquake',
+            'felt': None,
+            'gap': 146,
+            'lat': 35.7305,
+            'lon': -117.542,
+            'magnitude': 0.67,
+            'magtype': 'ml',
+            'mmi': 6.0,
+            'network': 'ci',
+            'nst': 17,
+            'significance': 7,
+            'status': 'reviewed',
+            'time': '2024/06/18 13:50:56',
+            'title': 'M 0.7 - 13 km WSW of Searles Valley, CA',
+    },
+        {
+            'alert': None,
+            'cdi': None,
+            'depth': None,
+            'dmin': 0.1163,
+            'earthquake_id': 'c3820fd332',
+            'earthquake_type': 'earthquake',
+            'felt': None,
+            'gap': 146,
+            'lat': 35.7305,
+            'lon': None,
+            'magnitude': 0.67,
+            'magtype': 'ml',
+            'mmi': None,
+            'network': 'ci',
+            'nst': None,
+            'significance': 7,
+            'status': 'reviewed',
+            'time': get_current_utc_time,
+            'title': 'M 0.7 - 13 km WSW of Searles Valley, CA',
+        },
+    ]
