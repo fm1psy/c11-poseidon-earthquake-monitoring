@@ -4,7 +4,6 @@
 
 from datetime import datetime, timezone
 import logging
-import extract2
 
 PAGER_ALERT_LEVELS = ['green', 'yellow', 'orange', 'red']
 READING_STATUS = ['automatic', 'reviewed', 'deleted']
