@@ -262,3 +262,21 @@ def test_validate_dmin_wrong_data_type(caplog):
 def test_validate_dmin_negative(caplog):
     assert validate_dmin(-5) == None
     assert 'dmin cannot be below 0' in caplog.messages
+
+
+@pytest.mark.parametrize("eq_type, eq_type_name, expected_value", [
+    ('earthquake', 'earthquake_type', 'earthquake'),
+    ('quarry', 'earthquake_type', 'quarry'),
+    ('ml', 'magtype', 'ml'),
+    ('mww', 'magtype', 'mww'),
+    ('mwb', 'magtype', 'mwb'),
+    (['ml'], 'magtype', None),
+    (['tsunami'], 'earthquake_type', None),
+])
+def test_validate_types(eq_type, eq_type_name, expected_value):
+    assert validate_types(eq_type, eq_type_name) == expected_value
+
+
+def test_validate_types_invalid_data_type(caplog):
+    assert validate_types(['ml'], 'magtype') == None
+    assert 'Invalid data type: expected a string for magtype' in caplog.messages

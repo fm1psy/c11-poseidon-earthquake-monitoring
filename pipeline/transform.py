@@ -216,12 +216,12 @@ def validate_dmin(dmin: float | int) -> None | float | int:
     return dmin
 
 
-def validate_types(eq_type: str) -> str | None:
+def validate_types(eq_type: str, eq_type_name: str) -> str | None:
     """
     This function validates readings for :magtype and type.
     """
     if not isinstance(eq_type, str):
-        logging.error('Invalid data type: expected a string')
+        logging.error(f'Invalid data type: expected a string for {eq_type_name}')
         return None
 
     return eq_type
@@ -313,8 +313,8 @@ def clean_data(data: dict) -> dict:
         'alert': validate_property(data['alert'], 'alert'),
         'status': validate_property(data['status'], 'status'),
         'network': validate_network(data['network']),
-        'magtype': validate_types(data['magtype']),
-        'earthquake_type': validate_types(data['earthquake_type']),
+        'magtype': validate_types(data['magtype'], 'magtype'),
+        'earthquake_type': validate_types(data['earthquake_type'], 'earthquake_type'),
         'magnitude': validate_reading(data['magnitude'], 'mag'),
         'lon': validate_reading(data['lon'], 'lon'),
         'lat': validate_reading(data['lat'], 'lat'),
