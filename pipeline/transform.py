@@ -35,12 +35,12 @@ def get_earthquake_property(data:dict, property_name: str) -> int | str | None:
             logging.error('Missing earthquake properties')
             return None
         if property_name not in data['properties']:
-            logging.error('Property %s not in data', property_name)
+            logging.error(f'Property {property_name} not in data')
             return None
         return data['properties'][property_name]
 
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {e}')
+        logging.error(f'An unexpected error occurred: {e} in getting {property_name}')
         return None
 
 
@@ -57,7 +57,7 @@ def get_earthquake_geometry(data: dict, geometry_param: str) -> int | None:
             logging.error('Missing earthquake geometry coordinates')
             return None
         if geometry_param not in geometry_index:
-            logging.error('Invalid geometry parameter: %s', geometry_param)
+            logging.error(f'Invalid geometry parameter: {geometry_param}')
             return None
         if len(data['geometry']['coordinates']) != 3:
             logging.error('Earthquake geometry coordinates missing either lon/lat/depth')
@@ -65,7 +65,7 @@ def get_earthquake_geometry(data: dict, geometry_param: str) -> int | None:
         return data['geometry']['coordinates'][geometry_index[geometry_param]]
 
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {e}')
+        logging.error(f'An unexpected error occurred: {e} in getting {geometry_param}')
         return None
 
 
@@ -79,7 +79,7 @@ def get_earthquake_id(data: dict) -> str | None:
             return None
         return data['id']
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {e}')
+        logging.error(f'An unexpected error occurred: {e} in getting earthquake id')
         return None
 
 def get_earthquake_data(data: dict) -> dict:
@@ -129,16 +129,16 @@ def get_earthquake_data(data: dict) -> dict:
     }
 
 
-def validate_earthquake_naming(name: str) -> None | str:
+def validate_earthquake_naming(name: str, identifier) -> None | str:
     """
     Used to validate earthquake_id and title
     """
     if name is None or name == '':
-        logging.error('No recorded value')
+        logging.error(f'No recorded value for {identifier}')
         return None
 
     if not isinstance(name, str):
-        logging.error('Invalid data type: expected string')
+        logging.error(f'Invalid data type: expected string in {identifier}')
         return None
 
     return name
@@ -310,7 +310,7 @@ def clean_data(data: dict) -> dict:
     data is recorded
     """
     return {
-        'earthquake_id': validate_earthquake_naming(data['earthquake_id']),
+        'earthquake_id': validate_earthquake_naming(data['earthquake_id'], 'earthquake_id'),
         'alert': validate_property(data['alert'], 'alert'),
         'status': validate_property(data['status'], 'status'),
         'network': validate_network(data['network']),
@@ -328,7 +328,7 @@ def clean_data(data: dict) -> dict:
         'nst': validate_inputs(data['nst'], 'nst'),
         'dmin': validate_dmin(data['dmin']),
         'gap': validate_reading(data['gap'], 'gap'),
-        'title': validate_earthquake_naming(data['title'])
+        'title': validate_earthquake_naming(data['title'], 'title')
     }
 
 
