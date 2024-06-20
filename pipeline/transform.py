@@ -15,11 +15,11 @@ MIN_LON = -180.0
 MAX_LAT = 90.0
 MIN_LAT = -90.0
 MAX_DEPTH = 1000
-MIN_DEPTH = 0
+MIN_DEPTH = -100
 MAX_CDI = 12.0
-MIN_CDI = 1.0
+MIN_CDI = 0.0
 MAX_MMI = 12.0
-MIN_MMI = 1.0
+MIN_MMI = 0.0
 MAX_SIG = 1000
 MIN_SIG = 0
 MAX_GAP = 360.0
@@ -202,15 +202,15 @@ def validate_dmin(dmin: float | int) -> None | float | int:
       from a seismic station, to where an earthquake happens
     """
     if dmin is None:
-        logging.error('No recorded value for dmin')
+        logging.error('No recorded value for "dmin"')
         return None
 
     if not isinstance(dmin, (float, int)):
-        logging.error('Invalid data type: expected int in dmin')
+        logging.error('Invalid data type: expected int in "dmin"')
         return None
 
     if dmin < 0:
-        logging.error('dmin cannot be below 0')
+        logging.error('"dmin" cannot be below 0')
         return None
 
     return dmin
@@ -221,7 +221,7 @@ def validate_types(eq_type: str, eq_type_name: str) -> str | None:
     This function validates readings for :magtype and type.
     """
     if not isinstance(eq_type, str):
-        logging.error(f'Invalid data type: expected a string for {eq_type_name}')
+        logging.error(f'Invalid data type: expected a string for "{eq_type_name}"')
         return None
 
     return eq_type
@@ -232,11 +232,11 @@ def validate_network(network: str) -> str | None:
     This function makes sure a valid network is entered
     """
     if not isinstance(network, str):
-        logging.error('Invalid data type for network: expected a string')
+        logging.error('Invalid data type for "network": expected a string')
         return None
 
     if len(network) != NETWORK_NAME_LENGTH:
-        logging.error(f'Invalid length for network: expected {NETWORK_NAME_LENGTH}')
+        logging.error(f'Invalid length for "network": expected {NETWORK_NAME_LENGTH}')
         return None
 
     return network
@@ -245,10 +245,10 @@ def validate_network(network: str) -> str | None:
 def validate_property(value: str, earthquake_property: str) -> None | str:
     """
     This function can validate earthquake readings for: 
-    alert, status, network
+    alert and status
     """
     if value is None:
-        logging.error('No recorded value')
+        logging.error(f'No recorded value for "{earthquake_property}"')
         return None
 
     valid_values = {
@@ -257,10 +257,11 @@ def validate_property(value: str, earthquake_property: str) -> None | str:
     }
 
     if not isinstance(value, str):
-        logging.error('Invalid data type: expected string')
+        logging.error(
+            f'Invalid data type: expected string for "{earthquake_property}"')
         return None
     if value.lower() not in valid_values[earthquake_property]:
-        logging.error(f'{earthquake_property.title()} not recognised. '
+        logging.error(f'"{earthquake_property}" not recognised. '
                     f'Value must be: {", ".join(valid_values[earthquake_property])}')
         return None
 

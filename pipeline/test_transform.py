@@ -251,17 +251,17 @@ def test_validate_dmin(dmin, expected_value):
 
 def test_validate_dmin_missing_reading(caplog):
     assert validate_dmin(None) == None
-    assert 'No recorded value for dmin' in caplog.messages
+    assert 'No recorded value for "dmin"' in caplog.messages
 
 
 def test_validate_dmin_wrong_data_type(caplog):
     assert validate_dmin('12') == None
-    assert 'Invalid data type: expected int in dmin' in caplog.messages
+    assert 'Invalid data type: expected int in "dmin"' in caplog.messages
 
 
 def test_validate_dmin_negative(caplog):
     assert validate_dmin(-5) == None
-    assert 'dmin cannot be below 0' in caplog.messages
+    assert '"dmin" cannot be below 0' in caplog.messages
 
 
 @pytest.mark.parametrize("eq_type, eq_type_name, expected_value", [
@@ -279,7 +279,7 @@ def test_validate_types(eq_type, eq_type_name, expected_value):
 
 def test_validate_types_invalid_data_type(caplog):
     assert validate_types(['ml'], 'magtype') == None
-    assert 'Invalid data type: expected a string for magtype' in caplog.messages
+    assert 'Invalid data type: expected a string for "magtype"' in caplog.messages
 
 
 @pytest.mark.parametrize("network, expected_value", [
@@ -294,9 +294,79 @@ def test_validate_network(network, expected_value):
 
 def test_validate_network_invalid_data_type(caplog):
     assert validate_network(['uu']) == None
-    assert 'Invalid data type for network: expected a string' in caplog.messages
+    assert 'Invalid data type for "network": expected a string' in caplog.messages
 
 
 def test_validate_network_invalid_length(caplog):
     assert validate_network('abc') == None
-    assert 'Invalid length for network: expected 2' in caplog.messages
+    assert 'Invalid length for "network": expected 2' in caplog.messages
+
+
+@pytest.mark.parametrize("value, earthquake_property, expected_value", [
+    ('yellow', 'alert', 'yellow'),
+    ('red', 'alert', 'red'),
+    ('green', 'alert', 'green'),
+    ('blue', 'alert', None),
+    (['green'], 'alert', None),
+    ({'alert': 'green'}, 'alert', None),
+    (None, 'alert', None),
+    ('automatic', 'status', 'automatic'),
+    ('reviewed', 'status', 'reviewed'),
+    (['reviewed'], 'status', None),
+    ({'status': 'deleted'}, 'status', None),
+    (None, 'status', None),
+])
+def test_validate_property(value, earthquake_property, expected_value):
+    assert validate_property(value, earthquake_property) == expected_value
+
+
+def test_validate_property_none(caplog):
+    assert validate_property(None, 'alert') == None
+    assert 'No recorded value for "alert"' in caplog.messages
+
+
+@pytest.mark.parametrize("value, earthquake_property, expected_value", [
+    (['reviewed'], 'status', None),
+    ({'status': 'deleted'}, 'status', None),
+    (['blue'], 'alert', None),
+    ({'alert': 'orange'}, 'status', None),
+])
+def test_validate_property_not_string(value, earthquake_property, expected_value, caplog):
+    assert validate_property(value, earthquake_property) == expected_value
+    assert f'Invalid data type: expected string for "{earthquake_property}"' in caplog.messages
+
+
+def test_validate_property_invalid_alert(caplog):
+    assert validate_property('blue', 'alert') == None
+    assert '"alert" not recognised. Value must be: green, yellow, orange, red' in caplog.messages
+
+
+def test_validate_property_invalid_status(caplog):
+    assert validate_property('done', 'status') == None
+    assert '"status" not recognised. Value must be: automatic, reviewed, deleted' in caplog.messages
+
+
+@pytest.mark.parametrize("reading, reading_type, expected_value", [
+    (6.3, 'mag', 6.3),
+    (10.0, 'mag', 10.0),
+    (-0.20, 'mag', -0.20),
+    (-167.2378, 'lon', -167.2378),
+    (180.0, 'lon', 180.0),
+    (49, 'lat', 49),
+    (-20.1, 'lat', -20.1),
+    (, 'depth', 6.3),
+    (6.3, 'cdi', 6.3),
+    (6.3, 'mmi', 6.3),
+    (6.3, 'mmi', 6.3),
+    (6.3, 'sig', 6.3),
+    (6.3, 'gap', 6.3),
+    (6.3, 'mag', 6.3),
+    (6.3, 'mag', 6.3),
+    (6.3, 'mag', 6.3),
+    (6.3, 'mag', 6.3),
+    (6.3, 'mag', 6.3),
+    (6.3, 'mag', 6.3),
+
+])
+def test_validate_reading(reading, reading_type, expected_value):
+    assert validate_reading(reading, reading_type) == expected_value
