@@ -9,6 +9,9 @@ from psycopg2 import OperationalError
 from dotenv import load_dotenv
 import psycopg2.extras
 
+from extract import extract_process
+from transform import transform_process
+
 load_dotenv()
 
 DB_HOST = os.getenv('DB_HOST')
@@ -53,6 +56,28 @@ def get_cursor(conn: connection) -> cursor:
         return None
 
 
+def get_all_alerts(cursor: cursor) -> dict:
+    """Gets all alerts in RDS"""
+    formatted_alerts = {}
+
+    try:
+        logging.info("Retrieving all alerts from RDS")
+        cursor.execute("""SELECT * FROM alerts;""")
+        alerts = cursor.fetchall()
+        for alert in alerts:
+            formatted_alerts[alert["alert_value"]] = alert["alert_id"]
+        logging.info("Successfully fetched and formatted alerts")
+    except OperationalError as e:
+        logging.error(
+            "OperationalError occurred while fetching networks: %s", e)
+        return formatted_alerts
+    except Exception as e:
+        logging.error("An unexpected error occurred: %s", e)
+        return formatted_alerts
+
+    return formatted_alerts
+
+
 def get_all_networks(cursor: cursor) -> dict:
     """Gets all networks in RDS"""
     formatted_networks = {}
@@ -84,7 +109,7 @@ def get_all_statuses(cursor: cursor) -> dict:
         cursor.execute("""SELECT * FROM statuses;""")
         statuses = cursor.fetchall()
         for status in statuses:
-            formatted_statuses[status["status_value"]] = status["status_id"]
+            formatted_statuses[status["status"]] = status["status_id"]
         logging.info("Successfully fetched and formatted statuses")
     except OperationalError as e:
         logging.error(
@@ -252,14 +277,14 @@ def get_magtype_id(magtype_value: str, all_magtypes: dict) -> int | None:
 
 
 def add_type_to_db(conn: connection, cursor: cursor, earthquake_type: str) -> int | None:
-    """Adds provided magtype value to the RDS"""
+    """Adds provided earthquake type value to the RDS"""
     try:
         logging.info(f"Adding {earthquake_type} to RDS")
         cursor.execute(
-            """INSERT INTO types (type_value) VALUES (%s) RETURNING magtype_id""", (magtype_value))
+            """INSERT INTO types (type_value) VALUES (%s) RETURNING type_id""", (earthquake_type))
         new_id = cursor.fetchone()[0]
         conn.commit()
-        logging.info(f"Added {magtype_value} to RDS")
+        logging.info(f"Added {earthquake_type} to RDS")
         return new_id
     except psycopg2.IntegrityError as e:
         logging.error(f"Integrity error: {e}")
@@ -279,21 +304,21 @@ def add_type_to_db(conn: connection, cursor: cursor, earthquake_type: str) -> in
         return None
 
 
-def get_magtype_id(magtype_value: str, all_magtypes: dict) -> int | None:
+def get_type_id(earthquake_type: str, all_types: dict) -> int | None:
     """Retrieves the associated network_id for a given network_value"""
     try:
-        logging.info(f"Retrieving magtype_id for {magtype_value}")
-        if magtype_value in all_magtypes:
-            return all_magtypes[magtype_value]
+        logging.info(f"Retrieving magtype_id for {earthquake_type}")
+        if earthquake_type in all_types:
+            return all_types[earthquake_type]
 
         logging.info(f"network_name not present in database")
-        new_id = add_network_to_db(magtype_value)
+        new_id = add_network_to_db(earthquake_type)
 
         if new_id is None:
             raise ValueError(f"Failed to add network {
-                             magtype_value} to the database")
+                             earthquake_type} to the database")
 
-        all_magtypes[magtype_value] = new_id
+        all_types[earthquake_type] = new_id
         return new_id
     except KeyError as e:
         logging.error(f"Key error: {e}")
@@ -305,17 +330,39 @@ def get_magtype_id(magtype_value: str, all_magtypes: dict) -> int | None:
     return None
 
 
-def add_earthquake_data_to_rds(cursor: cursor, earthquake_data: list[dict], all_alerts: dict, all_statuses: dict) -> None:
+def add_earthquake_data_to_rds(conn: connection, cursor: cursor, earthquake_data: list[dict], all_alerts: dict, all_statuses: dict, all_networks: dict, all_magtypes, all_types) -> None:
     for earthquake in earthquake_data:
-        alert_id = all_alerts[earthquake["alert"]]
+        if earthquake["alert"]:
+            alert_id = all_alerts[earthquake["alert"]]
+        else:
+            alert_id = None
         status_id = all_statuses[earthquake["status"]]
-        network_id = get_network_id(earthquake_data["network"])
-        magtype_id = get_magtype_id(earthquake_data["magtype"])
+        network_id = get_network_id(earthquake_data["network"], all_networks)
+        magtype_id = get_magtype_id(earthquake_data["magtype"], all_magtypes)
+        type_id = get_type_id(earthquake_data["earthquake_type"], all_types)
 
-    sql_query = """INSERT INTO earthquakes (earthquake_id, alert_id, status_id, network_id, magtype_id, type_id, magnitude, lon, lat, depth, time, felt, cdi, mmi, significance, nst, dmin, gap, title)
-                    values (%(earthquake_id)s)"""
+        cursor.execute("""INSERT INTO earthquakes (earthquake_id, alert_id, status_id, network_id, magtype_id, type_id, magnitude, lon, lat, depth, time, felt, cdi, mmi, significance, nst, dmin, gap, title)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (earthquake["earthquake_id"], alert_id, status_id, network_id, magtype_id, type_id,
+                          earthquake["magnitude"], earthquake["lon"], earthquake["lat"], earthquake["depth"],
+                          earthquake["time"], earthquake["felt"], earthquake["cdi"], earthquake["mmi"],
+                          earthquake["significance]"], earthquake["nst"], earthquake["dmin"], earthquake["gap"], earthquake["title"]))
+
+        conn.commit()
 
 
 if __name__ == "__main__":
+    all_data = extract_process()
+    transformed_data = transform_process(all_data)
+
     con = get_connection(DB_HOST, DB_NAME, DB_USERNAME, DB_PASSWORD, DB_PORT)
     cur = get_cursor(con)
+
+    all_alerts = get_all_alerts(cur)
+    all_networks = get_all_networks(cur)
+    all_statuses = get_all_statuses(cur)
+    all_magtypes = get_all_magtypes(cur)
+    all_types = get_all_types(cur)
+
+    add_earthquake_data_to_rds(
+        con, cur, transformed_data, all_alerts, all_statuses, all_networks, all_magtypes, all_types)
