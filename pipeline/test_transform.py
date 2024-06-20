@@ -234,3 +234,16 @@ def test_validate_inputs_invalid_data_type(caplog):
 def test_validate_inputs_negative(caplog):
     assert validate_inputs(-12, 'felt') == None
     assert 'inputted_data for "felt" cannot be below 0' in caplog.messages
+
+
+@pytest.mark.parametrize("dmin, expected_value", [
+    (12.5, 12.5),
+    (5, 5),
+    (5235, 5235),
+    (0, 0),
+    (None, None),
+    ('12.5', None),
+    (-12, None),
+])
+def test_validate_dmin(dmin, expected_value):
+    assert validate_dmin(dmin) == expected_value

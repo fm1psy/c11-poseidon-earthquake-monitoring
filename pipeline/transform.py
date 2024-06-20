@@ -196,7 +196,7 @@ def validate_inputs(inputted_data: int, input_type: str) -> None | int:
     return inputted_data
 
 
-def validate_dmin(dmin: float) -> None | float:
+def validate_dmin(dmin: float | int) -> None | float | int:
     """
     Used to validate dmin which measures the closest horizontal distance
       from a seismic station, to where an earthquake happens
