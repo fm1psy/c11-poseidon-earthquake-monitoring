@@ -156,7 +156,7 @@ def validate_time(time_in_ms: int) -> str:
     Used to validate the time, given an epoch value
     """
     if time_in_ms is None:
-        logging.error('No recorded value')
+        logging.error('No recorded value for earthquake time')
         return None
 
     current_time = datetime.now(timezone.utc)
@@ -174,22 +174,23 @@ def validate_time(time_in_ms: int) -> str:
     return recording_time.strftime("%Y/%m/%d %H:%M:%S")
 
 
-def validate_inputs(inputted_data: int) -> None | int:
+def validate_inputs(inputted_data: int, input_type: str) -> None | int:
     """
     Used to validate data where data has been inputted manually,
     checks number of people who felt the earthquake and number of
     stations which recorded the earthquake
     """
     if inputted_data is None:
-        logging.error('No recorded value')
+        logging.error(f'No recorded value for "{input_type}"')
         return None
 
     if not isinstance(inputted_data, int):
-        logging.error(f'Invalid data type: expected int in inputs {inputted_data}')
+        logging.error(
+            f'Invalid data type: expected int in inputs for "{input_type}"')
         return None
 
     if inputted_data < 0:
-        logging.error('{input} cannot be below 0')
+        logging.error(f'inputted_data for "{input_type}" cannot be below 0')
         return None
 
     return inputted_data
@@ -294,7 +295,7 @@ def validate_reading(reading: float | int, reading_type: str) -> None | float | 
         return None
 
     if not min_value <= reading <= max_value:
-        logging.error(f'Magnitude value {reading} out of range. '
+        logging.error(f'"{reading_type}" value {reading} out of range. '
                       f'Value must be between {min_value} and {max_value}.')
         return None
 
@@ -319,11 +320,11 @@ def clean_data(data: dict) -> dict:
         'lat': validate_reading(data['lat'], 'lat'),
         'depth': validate_reading(data['depth'], 'depth'),
         'time': validate_time(data['time']),
-        'felt': validate_inputs(data['felt']),
+        'felt': validate_inputs(data['felt'], 'felt'),
         'cdi': validate_reading(data['cdi'], 'cdi'),
         'mmi': validate_reading(data['mmi'], 'mmi'),
         'significance': validate_reading(data['significance'], 'sig'),
-        'nst': validate_inputs(data['nst']),
+        'nst': validate_inputs(data['nst'], 'nst'),
         'dmin': validate_dmin(data['dmin']),
         'gap': validate_reading(data['gap'], 'gap'),
         'title': validate_earthquake_naming(data['title'])

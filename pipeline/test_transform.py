@@ -191,7 +191,7 @@ def test_validate_time(time_in_ms, expected_value, get_current_utc_time, caplog)
         expected_value = get_current_utc_time
     assert validate_time(time_in_ms) == expected_value
     if expected_value is None:
-        assert 'No recorded value' in caplog.messages
+        assert 'No recorded value for earthquake time' in caplog.messages
 
 
 def test_validate_time_invalid_data_type(get_current_utc_time, caplog):
@@ -202,3 +202,35 @@ def test_validate_time_invalid_data_type(get_current_utc_time, caplog):
 def test_validate_time_future_time(get_current_utc_time, caplog):
     assert validate_time(33109056003843) == get_current_utc_time
     assert 'Future earthquake cannot be predicted' in caplog.messages
+
+
+@pytest.mark.parametrize("inputted_data, input_type ,expected_value", [
+    (2345, 'felt', 2345),
+    (12, 'nst', 12),
+    (2,'felt',2),
+    (12.5,'felt', None),
+    (10.2, 'nst', None),
+    (0, 'nst', 0),
+    (-1, 'felt', None),
+    ('12', 'nst', None),
+    ([12, 24], 'felt', None),
+    ({'input': 34}, 'nst', None),
+    (None, 'nst', None),
+])
+def test_validate_inputs(inputted_data, input_type, expected_value):
+    assert validate_inputs(inputted_data, input_type) == expected_value
+
+
+def test_validate_inputs_no_reading(caplog):
+    assert validate_inputs(None, 'felt') == None
+    assert 'No recorded value for "felt"' in caplog.messages
+
+
+def test_validate_inputs_invalid_data_type(caplog):
+    assert validate_inputs(12.0, 'felt') == None
+    assert 'Invalid data type: expected int in inputs for "felt"' in caplog.messages
+
+
+def test_validate_inputs_negative(caplog):
+    assert validate_inputs(-12, 'felt') == None
+    assert 'inputted_data for "felt" cannot be below 0' in caplog.messages
