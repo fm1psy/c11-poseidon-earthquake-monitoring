@@ -176,9 +176,9 @@ def test_convert_epoch_to_utc(time_in_ms, expected_value):
 
 
 @pytest.mark.parametrize("time_in_ms, expected_value", [
-    (0, '01/01/1970 00:00:00'),
-    (1609459200000, '01/01/2021 00:00:00'),
-    (1718708469755, '18/06/2024 11:01:09'),
+    (0, '1970/01/01 00:00:00'),
+    (1609459200000, '2021/01/01 00:00:00'),
+    (1718708469755, '2024/06/18 11:01:09'),
     (33109056003843, 'future_date'),
     ('1609459200000', 'string'),
     ([1609459200000], 'list'),
@@ -192,3 +192,13 @@ def test_validate_time(time_in_ms, expected_value, get_current_utc_time, caplog)
     assert validate_time(time_in_ms) == expected_value
     if expected_value is None:
         assert 'No recorded value' in caplog.messages
+
+
+def test_validate_time_invalid_data_type(get_current_utc_time, caplog):
+    assert validate_time('error') == get_current_utc_time
+    assert 'Invalid data type: expected int for time_in_ms' in caplog.messages
+
+
+def test_validate_time_future_time(get_current_utc_time, caplog):
+    assert validate_time(33109056003843) == get_current_utc_time
+    assert 'Future earthquake cannot be predicted' in caplog.messages

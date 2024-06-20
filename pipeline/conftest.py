@@ -19,7 +19,7 @@ def get_current_epoch_time():
 @pytest.fixture
 def get_current_utc_time():
     current_time = datetime.now(timezone.utc)
-    return current_time.strftime("%d/%m/%Y %H:%M:%S")
+    return current_time.strftime("%Y/%m/%d %H:%M:%S")
 
 
 

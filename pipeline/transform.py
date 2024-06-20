@@ -162,16 +162,16 @@ def validate_time(time_in_ms: int) -> str:
     current_time = datetime.now(timezone.utc)
 
     if not isinstance(time_in_ms, int):
-        logging.error('Invalid data type: expected int in time')
-        return current_time.strftime("%d/%m/%Y %H:%M:%S")
+        logging.error('Invalid data type: expected int for time_in_ms')
+        return current_time.strftime("%Y/%m/%d %H:%M:%S")
 
     recording_time = convert_epoch_to_utc(time_in_ms)
 
     if recording_time > current_time:
         logging.error('Future earthquake cannot be predicted')
-        return current_time.strftime("%d/%m/%Y %H:%M:%S")
+        return current_time.strftime("%Y/%m/%d %H:%M:%S")
 
-    return recording_time.strftime("%d/%m/%Y %H:%M:%S")
+    return recording_time.strftime("%Y/%m/%d %H:%M:%S")
 
 
 def validate_inputs(inputted_data: int) -> None | int:
