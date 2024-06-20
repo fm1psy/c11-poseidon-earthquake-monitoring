@@ -101,23 +101,6 @@ resource "aws_iam_role" "reporting_lambda_role" {
   })
 }
 
-resource "aws_iam_policy" "reporting_sns_policy" {
-  name = "poseidon-weekly-reporting-sns-policy"
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect = "Allow",
-      Action = "SNS:Publish",
-      Resource = "*"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "reporting_sns_policy_attachment" {
-  role       = aws_iam_role.reporting_lambda_role.name
-  policy_arn = aws_iam_policy.reporting_sns_policy.arn
-}
-
 resource "aws_iam_policy" "reporting_s3_access_policy" {
   name        = "poseidon-reporting-s3-access-policy"
   description = "Policy to allow lambda to leverage s3 bucket"
