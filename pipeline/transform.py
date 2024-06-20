@@ -35,7 +35,7 @@ def get_earthquake_property(data:dict, property_name: str) -> int | str | None:
             logging.error('Missing earthquake properties')
             return None
         if property_name not in data['properties']:
-            logging.error('Property "%s" not in data', property_name)
+            logging.error('Property %s not in data', property_name)
             return None
         return data['properties'][property_name]
 
@@ -57,7 +57,7 @@ def get_earthquake_geometry(data: dict, geometry_param: str) -> int | None:
             logging.error('Missing earthquake geometry coordinates')
             return None
         if geometry_param not in geometry_index:
-            logging.error('Invalid geometry parameter: "%s"', geometry_param)
+            logging.error('Invalid geometry parameter: %s', geometry_param)
             return None
         if len(data['geometry']['coordinates']) != 3:
             logging.error('Earthquake geometry coordinates missing either lon/lat/depth')
