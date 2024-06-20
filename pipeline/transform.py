@@ -133,7 +133,7 @@ def validate_earthquake_naming(name: str) -> None | str:
     """
     Used to validate earthquake_id and title
     """
-    if name is None:
+    if name is None or name == '':
         logging.error('No recorded value')
         return None
 
@@ -184,7 +184,7 @@ def validate_inputs(inputted_data: int, input_type: str) -> None | int:
         logging.error(f'No recorded value for "{input_type}"')
         return None
 
-    if not isinstance(inputted_data, int):
+    if not isinstance(inputted_data, int) or type(inputted_data) == bool:
         logging.error(
             f'Invalid data type: expected int in inputs for "{input_type}"')
         return None
@@ -205,7 +205,7 @@ def validate_dmin(dmin: float | int) -> None | float | int:
         logging.error('No recorded value for "dmin"')
         return None
 
-    if not isinstance(dmin, (float, int)):
+    if not isinstance(dmin, (float, int)) or type(dmin) == bool:
         logging.error('Invalid data type: expected int in "dmin"')
         return None
 
@@ -247,7 +247,7 @@ def validate_property(value: str, earthquake_property: str) -> None | str:
     This function can validate earthquake readings for: 
     alert and status
     """
-    if value is None:
+    if value is None or value == '':
         logging.error(f'No recorded value for "{earthquake_property}"')
         return None
 
@@ -291,7 +291,7 @@ def validate_reading(reading: float | int, reading_type: str) -> None | float | 
     max_value = reading_types[reading_type][0]
     min_value = reading_types[reading_type][1]
 
-    if not isinstance(reading, (float, int)):
+    if not isinstance(reading, (float, int)) or type(reading) == bool:
         logging.error(f'Invalid data type: expected a number for "{reading_type}"')
         return None
 

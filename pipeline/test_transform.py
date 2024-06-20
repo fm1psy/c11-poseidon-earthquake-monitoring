@@ -141,7 +141,8 @@ def test_get_earthquake_data(example_reading):
 
 
 @pytest.mark.parametrize("name, expected_value", [
-    ('M 0.7 - 13 km WSW of Searles Valley, CA', 'M 0.7 - 13 km WSW of Searles Valley, CA'),
+    ('M 0.7 - 13 km WSW of Searles Valley, CA',
+     'M 0.7 - 13 km WSW of Searles Valley, CA'),
     ('ci40801680', 'ci40801680'),
     (12345, None),
     (['ci40801680'], None),
@@ -149,6 +150,15 @@ def test_get_earthquake_data(example_reading):
     ('ak0247tbx02t', 'ak0247tbx02t'),
     ('M 0.9 - 6 km NNW of Houston, Alaska', 'M 0.9 - 6 km NNW of Houston, Alaska'),
     (('M 0.9 - 6 km NNW of Houston, Alaska', 'ak0247tbx02t'), None),
+    ('M 3.2 - 5 km ESE of Ojai, CA', 'M 3.2 - 5 km ESE of Ojai, CA'),
+    ('us7000d1jv', 'us7000d1jv'),
+    ('M 4.5 - 10 km NE of Pahala, Hawaii', 'M 4.5 - 10 km NE of Pahala, Hawaii'),
+    ('M 2.1 - Off the coast of Oregon', 'M 2.1 - Off the coast of Oregon'),
+    ('ci20173338', 'ci20173338'),
+    ('us1000h8sf', 'us1000h8sf'),
+    (True, None), 
+    (False, None), 
+    (1.23, None),  
 ])
 def test_validate_earthquake_naming(name, expected_value, caplog):
     with caplog.at_level(logging.ERROR):
@@ -159,9 +169,13 @@ def test_validate_earthquake_naming(name, expected_value, caplog):
             assert not caplog.messages
 
 
-def test_validate_earthquake_naming_no_value(caplog):
+@pytest.mark.parametrize("name, expected_value", [
+    ('', None),
+    (None, None)
+])
+def test_validate_earthquake_naming_no_value(name, expected_value, caplog):
     with caplog.at_level(logging.ERROR):
-        assert validate_earthquake_naming(None) == None
+        assert validate_earthquake_naming(name) == expected_value
         assert 'No recorded value' in caplog.messages
 
 
@@ -183,8 +197,7 @@ def test_convert_epoch_to_utc(time_in_ms, expected_value):
     ('1609459200000', 'string'),
     ([1609459200000], 'list'),
     ({'date': 1609459200000}, 'dict'),
-    (None, None)
-
+    (None, None),
 ])
 def test_validate_time(time_in_ms, expected_value, get_current_utc_time, caplog):
     if expected_value in ['future_date', 'string', 'list', 'dict']:
@@ -216,6 +229,17 @@ def test_validate_time_future_time(get_current_utc_time, caplog):
     ([12, 24], 'felt', None),
     ({'input': 34}, 'nst', None),
     (None, 'nst', None),
+    (0, 'felt', 0),
+    (0.1, 'felt', None),
+    (1, 'felt', 1),
+    (-1, 'nst', None),
+    (1234567890, 'felt', 1234567890), 
+    (1e6, 'nst', None), 
+    (True, 'nst', None), 
+    (False, 'felt', None), 
+    ([], 'nst', None),
+    ({}, 'felt', None),
+    (set(), 'nst', None), 
 ])
 def test_validate_inputs(inputted_data, input_type, expected_value):
     assert validate_inputs(inputted_data, input_type) == expected_value
@@ -244,6 +268,16 @@ def test_validate_inputs_negative(caplog):
     (None, None),
     ('12.5', None),
     (-12, None),
+    ('0', None), 
+    ('-1', None),  
+    ('string', None),  
+    (True, None), 
+    (False, None), 
+    ([], None),
+    ({}, None), 
+    (set(), None),
+    ([12.5], None),
+    (0.0, 0.0),
 ])
 def test_validate_dmin(dmin, expected_value):
     assert validate_dmin(dmin) == expected_value
@@ -277,9 +311,20 @@ def test_validate_types(eq_type, eq_type_name, expected_value):
     assert validate_types(eq_type, eq_type_name) == expected_value
 
 
-def test_validate_types_invalid_data_type(caplog):
-    assert validate_types(['ml'], 'magtype') == None
-    assert 'Invalid data type: expected a string for "magtype"' in caplog.messages
+@pytest.mark.parametrize("eq_type, eq_type_name, expected_value", [
+    (12, 'magtype', None),
+    (['ml'], 'magtype', None),
+    ({'type': 'ml'}, 'magtype', None),
+    ((1, 'ml'), 'magtype', None),
+    (424, 'earthquake_type', None),
+    (['quake'], 'earthquake_type', None),
+    ({'type': 'earthquake'}, 'earthquake_type', None),
+    ((1, 'quake'), 'earthquake_type', None),
+
+])
+def test_validate_types_invalid_data_type(eq_type, eq_type_name, expected_value, caplog):
+    assert validate_types(eq_type, eq_type_name) == expected_value
+    assert f'Invalid data type: expected a string for "{eq_type_name}"' in caplog.messages
 
 
 @pytest.mark.parametrize("network, expected_value", [
@@ -287,18 +332,33 @@ def test_validate_types_invalid_data_type(caplog):
     ('werewr', None),
     ('uu', 'uu'),
     (['aa'], None),
+    (('bbc'), None),
+    ({'network': 'uu'}, None),
+    ('3', None),
+    ('ag', 'ag'),
+    ('aeg', None),
 ])
 def test_validate_network(network, expected_value):
     assert validate_network(network) == expected_value
 
 
-def test_validate_network_invalid_data_type(caplog):
-    assert validate_network(['uu']) == None
+@pytest.mark.parametrize("network, expected_value", [
+    (12, None),
+    (['ag'], None),
+    ((1, 'uu'), None),
+    ({'network': 'uu'}, None),
+])
+def test_validate_network_invalid_data_type(network, expected_value , caplog):
+    assert validate_network(network) == expected_value
     assert 'Invalid data type for "network": expected a string' in caplog.messages
 
 
-def test_validate_network_invalid_length(caplog):
-    assert validate_network('abc') == None
+@pytest.mark.parametrize("network, expected_value", [
+    ('abd', None),
+    ('f', None),
+])
+def test_validate_network_invalid_length(network, expected_value, caplog):
+    assert validate_network(network) == expected_value
     assert 'Invalid length for "network": expected 2' in caplog.messages
 
 
@@ -366,15 +426,26 @@ def test_validate_property_invalid_status(caplog):
     ('289', 'depth', None),
     (13, 'cdi', None),
     ([3.9], 'mag', None),
-
+    ('invalid', 'sig', None),
+    ({'value': 96.2}, 'gap', None),  
+    (True, 'mag', None), 
+    (False, 'mag', None),
 ])
 def test_validate_reading(reading, reading_type, expected_value):
     assert validate_reading(reading, reading_type) == expected_value
 
 
-def test_validate_reading_missing_value(caplog):
-    assert validate_reading(None, 'mmi') == None
-    assert 'No recorded value for "mmi"' in caplog.messages
+@pytest.mark.parametrize("reading, reading_type, expected_value", [
+    (None, 'mag', None),
+    (None, 'lon', None),
+    (None, 'lat', None),
+    (None, 'depth', None),
+    (None, 'cdi', None),
+    (None, 'mag', None),
+])
+def test_validate_reading_missing_value(reading, reading_type, expected_value, caplog):
+    assert validate_reading(reading, reading_type) == expected_value
+    assert f'No recorded value for "{reading_type}"' in caplog.messages
 
 
 @pytest.mark.parametrize("reading, reading_type, expected_value", [
