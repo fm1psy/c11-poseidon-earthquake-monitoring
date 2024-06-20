@@ -4,6 +4,7 @@
 
 from datetime import datetime, timezone
 import logging
+import extract2
 
 PAGER_ALERT_LEVELS = ['green', 'yellow', 'orange', 'red']
 READING_STATUS = ['automatic', 'reviewed', 'deleted']
@@ -162,7 +163,7 @@ def validate_time(time_in_ms: int) -> str:
     current_time = datetime.now(timezone.utc)
 
     if not isinstance(time_in_ms, int):
-        logging.error('Invalid data type: expected int')
+        logging.error('Invalid data type: expected int in time')
         return current_time.strftime("%d/%m/%Y %H:%M:%S")
 
     recording_time = convert_epoch_to_utc(time_in_ms)
@@ -185,7 +186,7 @@ def validate_inputs(inputted_data: int) -> None | int:
         return None
 
     if not isinstance(inputted_data, int):
-        logging.error('Invalid data type: expected int')
+        logging.error(f'Invalid data type: expected int in inputs {inputted_data}')
         return None
 
     if inputted_data < 0:
@@ -204,8 +205,8 @@ def validate_dmin(dmin: float) -> None | float:
         logging.error('No recorded value')
         return None
 
-    if not isinstance(dmin, float):
-        logging.error('Invalid data type: expected int')
+    if not isinstance(dmin, (float, int)):
+        logging.error('Invalid data type: expected int in dmin')
         return None
 
     if dmin < 0:
@@ -311,9 +312,9 @@ def clean_data(data: dict) -> dict:
         'earthquake_id': validate_earthquake_naming(data['earthquake_id']),
         'alert': validate_property(data['alert'], 'alert'),
         'status': validate_property(data['status'], 'status'),
-        'network': validate_property(data['network'], 'network'),
-        'magtype': validate_property(data['magtype'], 'magtype'),
-        'earthquake_type': validate_property(data['earthquake_type'], 'type'),
+        'network': validate_network(data['network']),
+        'magtype': validate_types(data['magtype']),
+        'earthquake_type': validate_types(data['earthquake_type']),
         'magnitude': validate_reading(data['magnitude'], 'mag'),
         'lon': validate_reading(data['lon'], 'lon'),
         'lat': validate_reading(data['lat'], 'lat'),
@@ -338,3 +339,9 @@ def transform_process(extracted_data: list[dict]) -> list[dict]:
                         format='%(asctime)s - %(levelname)s - %(message)s')
     latest_data = [get_earthquake_data(data)for data in extracted_data]
     return [clean_data(data) for data in latest_data]
+
+
+if __name__ == "__main__":
+    for i in transform_process(extract2.extract_process()):
+        print(i)
+        print('\n')

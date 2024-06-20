@@ -1,6 +1,7 @@
 from transform import *
 import pytest
 import logging
+import datetime
 
 @pytest.mark.parametrize("property_name, expected_value", [
     ('mag', 0.67),
@@ -163,3 +164,31 @@ def test_validate_earthquake_naming_no_value(caplog):
         assert validate_earthquake_naming(None) == None
         assert 'No recorded value' in caplog.messages
 
+
+@ pytest.mark.parametrize("time_in_ms, expected_value", [
+    (0, datetime.datetime(1970, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)),
+    (1609459200000, datetime.datetime(2021, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)),
+    (1718708469755, datetime.datetime(2024, 6, 18, 11, 1, 9, 755000, tzinfo=datetime.timezone.utc)),
+    (1893456000000, datetime.datetime(2030, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)),
+])
+def test_convert_epoch_to_utc(time_in_ms, expected_value):
+    assert convert_epoch_to_utc(time_in_ms) == expected_value
+
+
+@pytest.mark.parametrize("time_in_ms, expected_value", [
+    (0, '01/01/1970 00:00:00'),
+    (1609459200000, '01/01/2021 00:00:00'),
+    (1718708469755, '18/06/2024 11:01:09'),
+    (33109056003843, 'future_date'),
+    ('1609459200000', 'string'),
+    ([1609459200000], 'list'),
+    ({'date': 1609459200000}, 'dict'),
+    (None, None)
+
+])
+def test_validate_time(time_in_ms, expected_value, get_current_utc_time, caplog):
+    if expected_value in ['future_date', 'string', 'list', 'dict']:
+        expected_value = get_current_utc_time
+    assert validate_time(time_in_ms) == expected_value
+    if expected_value is None:
+        assert 'No recorded value' in caplog.messages
