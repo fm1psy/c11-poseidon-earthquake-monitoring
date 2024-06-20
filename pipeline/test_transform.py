@@ -247,3 +247,18 @@ def test_validate_inputs_negative(caplog):
 ])
 def test_validate_dmin(dmin, expected_value):
     assert validate_dmin(dmin) == expected_value
+
+
+def test_validate_dmin_missing_reading(caplog):
+    assert validate_dmin(None) == None
+    assert 'No recorded value for dmin' in caplog.messages
+
+
+def test_validate_dmin_wrong_data_type(caplog):
+    assert validate_dmin('12') == None
+    assert 'Invalid data type: expected int in dmin' in caplog.messages
+
+
+def test_validate_dmin_negative(caplog):
+    assert validate_dmin(-5) == None
+    assert 'dmin cannot be below 0' in caplog.messages

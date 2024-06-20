@@ -202,7 +202,7 @@ def validate_dmin(dmin: float | int) -> None | float | int:
       from a seismic station, to where an earthquake happens
     """
     if dmin is None:
-        logging.error('No recorded value')
+        logging.error('No recorded value for dmin')
         return None
 
     if not isinstance(dmin, (float, int)):
