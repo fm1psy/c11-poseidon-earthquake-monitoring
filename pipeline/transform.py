@@ -184,7 +184,7 @@ def validate_inputs(inputted_data: int, input_type: str) -> None | int:
         logging.error(f'No recorded value for "{input_type}"')
         return None
 
-    if not isinstance(inputted_data, int) or type(inputted_data) == bool:
+    if not isinstance(inputted_data, int) or isinstance(inputted_data, bool):
         logging.error(
             f'Invalid data type: expected int in inputs for "{input_type}"')
         return None
@@ -205,7 +205,7 @@ def validate_dmin(dmin: float | int) -> None | float | int:
         logging.error('No recorded value for "dmin"')
         return None
 
-    if not isinstance(dmin, (float, int)) or type(dmin) == bool:
+    if not isinstance(dmin, (float, int)) or isinstance(dmin, bool):
         logging.error('Invalid data type: expected int in "dmin"')
         return None
 
@@ -291,7 +291,7 @@ def validate_reading(reading: float | int, reading_type: str) -> None | float | 
     max_value = reading_types[reading_type][0]
     min_value = reading_types[reading_type][1]
 
-    if not isinstance(reading, (float, int)) or type(reading) == bool:
+    if not isinstance(reading, (float, int)) or isinstance(reading, bool):
         logging.error(f'Invalid data type: expected a number for "{reading_type}"')
         return None
 
