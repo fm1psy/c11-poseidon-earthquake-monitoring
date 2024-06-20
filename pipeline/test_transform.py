@@ -137,3 +137,29 @@ def test_get_earthquake_data(example_reading):
         'gap': 146,
         'title': 'M 0.7 - 13 km WSW of Searles Valley, CA'
     }
+
+
+@pytest.mark.parametrize("name, expected_value", [
+    ('M 0.7 - 13 km WSW of Searles Valley, CA', 'M 0.7 - 13 km WSW of Searles Valley, CA'),
+    ('ci40801680', 'ci40801680'),
+    (12345, None),
+    (['ci40801680'], None),
+    ({'id': 'ci40801680'}, None),
+    ('ak0247tbx02t', 'ak0247tbx02t'),
+    ('M 0.9 - 6 km NNW of Houston, Alaska', 'M 0.9 - 6 km NNW of Houston, Alaska'),
+    (('M 0.9 - 6 km NNW of Houston, Alaska', 'ak0247tbx02t'), None),
+])
+def test_validate_earthquake_naming(name, expected_value, caplog):
+    with caplog.at_level(logging.ERROR):
+        assert validate_earthquake_naming(name) == expected_value
+        if expected_value is None:
+            assert 'Invalid data type: expected string' in caplog.messages
+        else:
+            assert not caplog.messages
+
+
+def test_validate_earthquake_naming_no_value(caplog):
+    with caplog.at_level(logging.ERROR):
+        assert validate_earthquake_naming(None) == None
+        assert 'No recorded value' in caplog.messages
+
