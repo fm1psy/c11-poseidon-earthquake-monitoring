@@ -31,12 +31,20 @@ def test_get_earthquake_property_valid(example_reading, property_name, expected_
 ])
 def test_get_earthquake_property_invalid_key(example_reading_missing_values, property_name, expected_value, caplog):
     with caplog.at_level(logging.ERROR):
-        result = get_earthquake_property(
-            example_reading_missing_values, property_name)
-        assert result == expected_value
+        assert get_earthquake_property(example_reading_missing_values, property_name) == expected_value
         if expected_value is None:
             assert 'Property non_existent_property not in data' in caplog.messages
         else:
             assert not caplog.messages
 
-def test_get_earthquake_property_missing_data(empty_reading)
+
+def test_get_earthquake_property_missing_data(empty_reading, caplog):  
+    with caplog.at_level(logging.ERROR):
+        assert get_earthquake_property(
+            empty_reading, 'mag') == None
+        assert 'Missing earthquake properties' in caplog.messages
+
+
+def test_get_earthquake_property_random_error():
+    with pytest.raises(Exception):
+        get_earthquake_property()
