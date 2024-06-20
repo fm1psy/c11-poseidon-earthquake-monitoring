@@ -35,12 +35,12 @@ def get_earthquake_property(data:dict, property_name: str) -> int | str | None:
             logging.error('Missing earthquake properties')
             return None
         if property_name not in data['properties']:
-            logging.error(f'Property {property_name} not in data')
+            logging.error(f'Property "{property_name}" not in data')
             return None
         return data['properties'][property_name]
 
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {e} in getting {property_name}')
+        logging.error(f'An unexpected error occurred: {e} in getting "{property_name}"')
         return None
 
 
@@ -65,7 +65,7 @@ def get_earthquake_geometry(data: dict, geometry_param: str) -> int | None:
         return data['geometry']['coordinates'][geometry_index[geometry_param]]
 
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {e} in getting {geometry_param}')
+        logging.error(f'An unexpected error occurred: {e} in getting "{geometry_param}"')
         return None
 
 
@@ -79,7 +79,7 @@ def get_earthquake_id(data: dict) -> str | None:
             return None
         return data['id']
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {e} in getting earthquake id')
+        logging.error(f'An unexpected error occurred: {e} in getting "earthquake id"')
         return None
 
 def get_earthquake_data(data: dict) -> dict:
@@ -134,11 +134,11 @@ def validate_earthquake_naming(name: str, identifier) -> None | str:
     Used to validate earthquake_id and title
     """
     if name is None or name == '':
-        logging.error(f'No recorded value for {identifier}')
+        logging.error(f'No recorded value for "{identifier}"')
         return None
 
     if not isinstance(name, str):
-        logging.error(f'Invalid data type: expected string in {identifier}')
+        logging.error(f'Invalid data type: expected string in "{identifier}"')
         return None
 
     return name
@@ -156,7 +156,7 @@ def validate_time(time_in_ms: int) -> str:
     Used to validate the time, given an epoch value
     """
     if time_in_ms is None:
-        logging.error('No recorded value for earthquake time')
+        logging.error('No recorded value for "earthquake time"')
         return None
 
     current_time = datetime.now(timezone.utc)

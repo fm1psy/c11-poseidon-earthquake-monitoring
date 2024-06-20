@@ -34,7 +34,7 @@ def test_get_earthquake_property_invalid_key(example_reading_missing_values, pro
     with caplog.at_level(logging.ERROR):
         assert get_earthquake_property(example_reading_missing_values, property_name) == expected_value
         if expected_value is None:
-            assert 'Property non_existent_property not in data' in caplog.messages
+            assert 'Property "non_existent_property" not in data' in caplog.messages
         else:
             assert not caplog.messages
 
@@ -140,43 +140,44 @@ def test_get_earthquake_data(example_reading):
     }
 
 
-@pytest.mark.parametrize("name, expected_value", [
-    ('M 0.7 - 13 km WSW of Searles Valley, CA',
-     'M 0.7 - 13 km WSW of Searles Valley, CA'),
-    ('ci40801680', 'ci40801680'),
-    (12345, None),
-    (['ci40801680'], None),
-    ({'id': 'ci40801680'}, None),
-    ('ak0247tbx02t', 'ak0247tbx02t'),
-    ('M 0.9 - 6 km NNW of Houston, Alaska', 'M 0.9 - 6 km NNW of Houston, Alaska'),
-    (('M 0.9 - 6 km NNW of Houston, Alaska', 'ak0247tbx02t'), None),
-    ('M 3.2 - 5 km ESE of Ojai, CA', 'M 3.2 - 5 km ESE of Ojai, CA'),
-    ('us7000d1jv', 'us7000d1jv'),
-    ('M 4.5 - 10 km NE of Pahala, Hawaii', 'M 4.5 - 10 km NE of Pahala, Hawaii'),
-    ('M 2.1 - Off the coast of Oregon', 'M 2.1 - Off the coast of Oregon'),
-    ('ci20173338', 'ci20173338'),
-    ('us1000h8sf', 'us1000h8sf'),
-    (True, None), 
-    (False, None), 
-    (1.23, None),  
+@pytest.mark.parametrize("name, identifier, expected_value", [
+    ('M 0.7 - 13 km WSW of Searles Valley, CA', 'title', 'M 0.7 - 13 km WSW of Searles Valley, CA'),
+    ('ci40801680', 'earthquake_id', 'ci40801680'),
+    (12345, 'title', None),
+    (['ci40801680'], 'earthquake_id', None),
+    ({'id': 'ci40801680'}, 'earthquake_id', None),
+    ('ak0247tbx02t', 'earthquake_id', 'ak0247tbx02t'),
+    ('M 0.9 - 6 km NNW of Houston, Alaska', 'title',
+     'M 0.9 - 6 km NNW of Houston, Alaska'),
+    (('M 0.9 - 6 km NNW of Houston, Alaska', 'ak0247tbx02t'), 'title', None),
+    ('M 3.2 - 5 km ESE of Ojai, CA', 'title', 'M 3.2 - 5 km ESE of Ojai, CA'),
+    ('us7000d1jv', 'earthquake_id','us7000d1jv'),
+    ('M 4.5 - 10 km NE of Pahala, Hawaii', 'title',
+     'M 4.5 - 10 km NE of Pahala, Hawaii'),
+    ('M 2.1 - Off the coast of Oregon', 'title', 'M 2.1 - Off the coast of Oregon'),
+    ('ci20173338', 'earthquake_id','ci20173338'),
+    ('us1000h8sf', 'earthquake_id','us1000h8sf'),
+    (True, 'earthquake_id', None),
+    (False, 'earthquake_id', None),
+    (1.23, 'earthquake_id', None),
 ])
-def test_validate_earthquake_naming(name, expected_value, caplog):
+def test_validate_earthquake_naming(name, identifier, expected_value, caplog):
     with caplog.at_level(logging.ERROR):
-        assert validate_earthquake_naming(name) == expected_value
+        assert validate_earthquake_naming(name, identifier) == expected_value
         if expected_value is None:
-            assert 'Invalid data type: expected string' in caplog.messages
+            assert f'Invalid data type: expected string in "{identifier}"' in caplog.messages
         else:
             assert not caplog.messages
 
 
-@pytest.mark.parametrize("name, expected_value", [
-    ('', None),
-    (None, None)
+@pytest.mark.parametrize("name, identifier,expected_value", [
+    ('', 'title', None),
+    (None, 'earthquake_id', None)
 ])
-def test_validate_earthquake_naming_no_value(name, expected_value, caplog):
+def test_validate_earthquake_naming_no_value(name, identifier, expected_value, caplog):
     with caplog.at_level(logging.ERROR):
-        assert validate_earthquake_naming(name) == expected_value
-        assert 'No recorded value' in caplog.messages
+        assert validate_earthquake_naming(name, identifier) == expected_value
+        assert f'No recorded value for "{identifier}"' in caplog.messages
 
 
 @ pytest.mark.parametrize("time_in_ms, expected_value", [
@@ -204,7 +205,7 @@ def test_validate_time(time_in_ms, expected_value, get_current_utc_time, caplog)
         expected_value = get_current_utc_time
     assert validate_time(time_in_ms) == expected_value
     if expected_value is None:
-        assert 'No recorded value for earthquake time' in caplog.messages
+        assert 'No recorded value for "earthquake time"' in caplog.messages
 
 
 def test_validate_time_invalid_data_type(get_current_utc_time, caplog):
