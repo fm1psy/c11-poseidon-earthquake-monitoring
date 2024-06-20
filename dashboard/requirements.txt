@@ -1,3 +1,4 @@
 streamlit
 streamlit-folium
 boto3
+python-dotenv
