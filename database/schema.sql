@@ -36,7 +36,7 @@ CREATE TABLE magtypes (
 );
 
 CREATE TABLE earthquakes (
-    earthquake_id VARCHAR(20) UNIQUE NOT NULL,
+    earthquake_id VARCHAR(20) UNIQUE NOT NULL PRIMARY KEY,
     magnitude REAL NOT NULL,
     lon DECIMAL(9, 6) NOT NULL,
     lat DECIMAL(8, 6) NOT NULL,
@@ -55,14 +55,12 @@ CREATE TABLE earthquakes (
     type_id SMALLINT NOT NULL,
     title TEXT NOT NULL,
     depth REAL NOT NULL,
-    PRIMARY KEY (earthquake_id),
     FOREIGN KEY (alert_id) REFERENCES alerts(alert_id),
     FOREIGN KEY (status_id) REFERENCES statuses(status_id),
     FOREIGN KEY (network_id) REFERENCES networks(network_id),
-    FOREIGN KEY (type_id) REFERENCES networks(network_id),
+    FOREIGN KEY (type_id) REFERENCES types(type_id),
     FOREIGN KEY (magtype_id) REFERENCES magtypes(magtype_id)
 );
-
 
 INSERT INTO alerts (alert_value) VALUES ('green'), ('yellow'), ('orange'), ('red');
 INSERT INTO networks (network_name) VALUES ('ak'), ('at'), ('ci'), ('hv'), ('ld'), ('mb'), ('nc'), ('nm'), ('nn'), ('pr'), ('pt'), ('se'), ('us'), ('uu'), ('uw');

@@ -8,10 +8,7 @@ import logging
 
 PAGER_ALERT_LEVELS = ['green', 'yellow', 'orange', 'red']
 READING_STATUS = ['automatic', 'reviewed', 'deleted']
-NETWORKS = ['ak', 'at', 'ci', 'hv', 'ld', 'mb', 'nc', 'nm',
-            'nn', 'pr', 'pt', 'se', 'us', 'uu', 'uw']
-MAGNITUDE_TYPES = ['md', 'ml', 'ms', 'mw', 'me', 'mi', 'mb', 'mlg']
-EARTHQUAKE_TYPES = ['earthquake', 'quarry']
+NETWORK_NAME_LENGTH = 2
 MAX_MAGNITUDE = 10.0
 MIN_MAGNITUDE = -1.0
 MAX_LON = 180.0
@@ -95,11 +92,10 @@ def get_earthquake_data(data: dict) -> dict:
     earthquake_id = get_earthquake_id(data)  # validate_earthquake_naming
     alert = get_earthquake_property(data, 'alert')  # validate_property
     status = get_earthquake_property(data, 'status')  # validate_property
-    network = get_earthquake_property(data, 'net')  # validate_property
-    magtype = get_earthquake_property(data, 'magType')  # validate_property
-    earthquake_type = get_earthquake_property(
-        data, 'type')  # validate_property
-    magnitude = get_earthquake_property(data, 'mag')  # validate_reading
+    network = get_earthquake_property(data, 'net')  # validate_network
+    magtype = get_earthquake_property(data, 'magType')  # validate_types
+    earthquake_type = get_earthquake_property(data, 'type')  # validate_types
+    magnitude = get_earthquake_property(data, 'mag') #validate_reading
     lon = get_earthquake_geometry(data, 'lon')  # validate_reading
     lat = get_earthquake_geometry(data, 'lat')  # validate_reading
     depth = get_earthquake_geometry(data, 'depth')  # validate_reading
@@ -223,10 +219,36 @@ def validate_dmin(dmin: float) -> None | float:
     return dmin
 
 
+def validate_types(eq_type: str) -> str | None:
+    """
+    This function validates readings for :magtype and type.
+    """
+    if not isinstance(eq_type, str):
+        logging.error('Invalid data type: expected a string')
+        return None
+
+    return eq_type
+
+
+def validate_network(network: str) -> str | None:
+    """
+    This function makes sure a valid network is entered
+    """
+    if not isinstance(network, str):
+        logging.error('Invalid data type for network: expected a string')
+        return None
+
+    if len(network) != NETWORK_NAME_LENGTH:
+        logging.error(f'Invalid length for network: expected {NETWORK_NAME_LENGTH}')
+        return None
+
+    return network
+
+
 def validate_property(value: str, earthquake_property: str) -> None | str:
     """
     This function can validate earthquake readings for: 
-    alert, status, network, magtype and type.
+    alert, status, network
     """
     if value is None:
         logging.error('No recorded value')
@@ -235,9 +257,6 @@ def validate_property(value: str, earthquake_property: str) -> None | str:
     valid_values = {
         'alert': PAGER_ALERT_LEVELS,
         'status': READING_STATUS,
-        'network': NETWORKS,
-        'magtype': MAGNITUDE_TYPES,
-        'type': EARTHQUAKE_TYPES
     }
 
     if not isinstance(value, str):

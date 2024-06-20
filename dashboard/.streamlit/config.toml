@@ -1,0 +1,11 @@
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "light"
+primaryColor = "#ADD8E6"
+
+[client]
+showSidebarNavigation = true
+
+#streamlit config show
