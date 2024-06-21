@@ -1,11 +1,12 @@
-"""This API is to be of use for those who wish to retrieve useful information from our database of earthquake data.
-Whether it be an amateur developer or a seasoned researcher, this service should be easy to make the most out of through its endpoints."""
+"""This API is to be of use for those who wish to retrieve useful information from our database of
+earthquake data. Whether it be an amateur developer or a seasoned researcher, this service should
+be easy to make the most out of through its endpoints."""
+from os import environ as env
 from dotenv import load_dotenv
-from flask import Flask, request
+from flask import Flask, Response
 import psycopg2
 import psycopg2.extras
 from psycopg2.extensions import connection, cursor
-from os import environ as env
 
 app = Flask(__name__)
 
@@ -22,11 +23,12 @@ def get_connection() -> connection:
 
 
 def get_cursor(conn: connection) -> cursor:
+    """Return a cursor object based on the connection passed."""
     return conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
 
-def get_earthquake_data() -> list[dict]:
-    """return a list of all earthquake data from the database."""
+def get_all_earthquakes() -> list[dict]:
+    """Return a list of all earthquake data from the database."""
     conn = get_connection()
 
     search_query = """SELECT * FROM earthquakes
@@ -44,18 +46,20 @@ def get_earthquake_data() -> list[dict]:
 
 
 @app.route("/", methods=["GET"])
-def endpoint_index():
-    return {"message": "Welcome! This is Team Poseidon's API, connected to our Earthquake database. Use this to retrieve information on the earthquake data we have collected."}
+def endpoint_index() -> Response:
+    """This is the default endpoint, displaying a basic message"""
+    return {"message": "Welcome! This is Team Poseidon's Earthquake Monitoring API!"}, 200
 
 
 @app.route("/earthquakes", methods=["GET"])
-def get_earthquakes():
-    if request.method == "GET":
-        try:
-            earthquakes = get_earthquake_data()
-            return earthquakes, 200
-        except Exception as e:
-            return {"error": str(e)}, 400
+def get_earthquakes() -> Response:
+    """This endpoint returns a list containing data on every earthquake in our system."""
+
+    try:
+        earthquakes = get_all_earthquakes()
+        return earthquakes, 200
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        return {"error": str(e)}, 400
 
 
 if __name__ == "__main__":

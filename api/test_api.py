@@ -22,6 +22,5 @@ def test_endpoint_index(client):
 
 def test_endpoint_get_earthquakes(client):
     response = client.get("/earthquakes")
-    print(response.json)
     assert response.status_code == 200
     assert isinstance(response.json, list)
