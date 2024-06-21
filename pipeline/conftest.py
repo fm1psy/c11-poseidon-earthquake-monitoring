@@ -447,7 +447,7 @@ def example_erroneous_reading():
         },
         'geometry': {
             'type': 'Point',
-            'coordinates': [-1907.542, 35.7305, -1000]
+            'coordinates': [-17.542, 35.7305, -1000]
         },
         'id': 'c3820fd332'
     }

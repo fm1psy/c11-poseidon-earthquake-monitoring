@@ -24,9 +24,10 @@ MAX_SIG = 1000
 MIN_SIG = 0
 MAX_GAP = 360.0
 MIN_GAP = 0.0
+REQUIRED_FIELDS = ['lat', 'lon', 'magnitude', 'magtype']
 
 
-def get_earthquake_property(data:dict, property_name: str) -> int | str | None:
+def get_earthquake_property(data: dict, property_name: str) -> int | str | None:
     """
     Gets earthquake properties from the api data
     """
@@ -40,7 +41,8 @@ def get_earthquake_property(data:dict, property_name: str) -> int | str | None:
         return data['properties'][property_name]
 
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {e} in getting "{property_name}"')
+        logging.error(f'An unexpected error occurred: {
+ e} in getting "{property_name}"')
         return None
 
 
@@ -60,12 +62,14 @@ def get_earthquake_geometry(data: dict, geometry_param: str) -> int | None:
             logging.error(f'Invalid geometry parameter: {geometry_param}')
             return None
         if len(data['geometry']['coordinates']) != 3:
-            logging.error('Earthquake geometry coordinates missing either lon/lat/depth')
+            logging.error(
+                'Earthquake geometry coordinates missing either lon/lat/depth')
             return None
         return data['geometry']['coordinates'][geometry_index[geometry_param]]
 
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {e} in getting "{geometry_param}"')
+        logging.error(f'An unexpected error occurred: {
+                      e} in getting "{geometry_param}"')
         return None
 
 
@@ -79,20 +83,22 @@ def get_earthquake_id(data: dict) -> str | None:
             return None
         return data['id']
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {e} in getting "earthquake id"')
+        logging.error(f'An unexpected error occurred: {
+                      e} in getting "earthquake id"')
         return None
+
 
 def get_earthquake_data(data: dict) -> dict:
     """
     Fetches each data point from the api, and returns it as a dictionary
     """
     earthquake_id = get_earthquake_id(data)  # validate_earthquake_naming
-    alert = get_earthquake_property(data, 'alert')  #validate_property
+    alert = get_earthquake_property(data, 'alert')  # validate_property
     status = get_earthquake_property(data, 'status')  # validate_property
     network = get_earthquake_property(data, 'net')  # validate_network
     magtype = get_earthquake_property(data, 'magType')  # validate_types
     earthquake_type = get_earthquake_property(data, 'type')  # validate_types
-    magnitude = get_earthquake_property(data, 'mag') #validate_reading
+    magnitude = get_earthquake_property(data, 'mag')  # validate_reading
     lon = get_earthquake_geometry(data, 'lon')  # validate_reading
     lat = get_earthquake_geometry(data, 'lat')  # validate_reading
     depth = get_earthquake_geometry(data, 'depth')  # validate_reading
@@ -104,7 +110,8 @@ def get_earthquake_data(data: dict) -> dict:
     nst = get_earthquake_property(data, 'nst')  # validate_inputs
     dmin = get_earthquake_property(data, 'dmin')  # validate_dmin
     gap = get_earthquake_property(data, 'gap')  # validate_reading
-    title = get_earthquake_property(data, 'title') #validate_earthquake_naming
+    title = get_earthquake_property(
+        data, 'title')  # validate_earthquake_naming
 
     return {
         'earthquake_id': earthquake_id,
@@ -221,7 +228,8 @@ def validate_types(eq_type: str, eq_type_name: str) -> str | None:
     This function validates readings for :magtype and type.
     """
     if not isinstance(eq_type, str):
-        logging.error(f'Invalid data type: expected a string for "{eq_type_name}"')
+        logging.error(f'Invalid data type: expected a string for "{
+                      eq_type_name}"')
         return None
 
     return eq_type
@@ -236,7 +244,8 @@ def validate_network(network: str) -> str | None:
         return None
 
     if len(network) != NETWORK_NAME_LENGTH:
-        logging.error(f'Invalid length for "network": expected {NETWORK_NAME_LENGTH}')
+        logging.error(f'Invalid length for "network": expected {
+                      NETWORK_NAME_LENGTH}')
         return None
 
     return network
@@ -262,7 +271,7 @@ def validate_property(value: str, earthquake_property: str) -> None | str:
         return None
     if value.lower() not in valid_values[earthquake_property]:
         logging.error(f'"{earthquake_property}" not recognised. '
-                    f'Value must be: {", ".join(valid_values[earthquake_property])}')
+                      f'Value must be: {", ".join(valid_values[earthquake_property])}')
         return None
 
     return value.lower()
@@ -292,7 +301,8 @@ def validate_reading(reading: float | int, reading_type: str) -> None | float | 
     min_value = reading_types[reading_type][1]
 
     if not isinstance(reading, (float, int)) or isinstance(reading, bool):
-        logging.error(f'Invalid data type: expected a number for "{reading_type}"')
+        logging.error(f'Invalid data type: expected a number for "{
+                      reading_type}"')
         return None
 
     if not min_value <= reading <= max_value:
@@ -332,11 +342,25 @@ def clean_data(data: dict) -> dict:
     }
 
 
+def is_valid_earthquake_data(data: dict) -> bool:
+    """
+    Checks if the earthquake data dictionary is valid.
+    True if data is valid (contains 'lat', 'lon', 'magnitude', 'magtype'), False otherwise.
+    """
+    return all(field in data and data[field] is not None for field in REQUIRED_FIELDS)
+
+
 def transform_process(extracted_data: list[dict]) -> list[dict]:
     """
-    Runs the functions to transform and clean all extracted data
+    Runs the functions to transform and clean all extracted earthquake data.
     """
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(levelname)s - %(message)s')
-    latest_data = [get_earthquake_data(data)for data in extracted_data]
-    return [clean_data(data) for data in latest_data]
+
+    latest_data = [get_earthquake_data(data) for data in extracted_data]
+    cleaned_data = [clean_data(data) for data in latest_data]
+    valid_data = [data for data in cleaned_data if is_valid_earthquake_data(data)]
+
+    return valid_data
+
+ 

@@ -489,7 +489,7 @@ def test_clean_data(example_erroneous_reading, get_current_utc_time):
         'magtype': 'ml',
         'earthquake_type': 'earthquake',
         'magnitude': 0.67,
-        'lon': None,
+        'lon': -17.542,
         'lat': 35.7305,
         'depth': None,
         'time': get_current_utc_time,
@@ -538,7 +538,7 @@ def test_transform_process(example_reading, example_erroneous_reading, get_curre
             'felt': None,
             'gap': 146,
             'lat': 35.7305,
-            'lon': None,
+            'lon': -17.542,
             'magnitude': 0.67,
             'magtype': 'ml',
             'mmi': None,
@@ -550,3 +550,14 @@ def test_transform_process(example_reading, example_erroneous_reading, get_curre
             'title': 'M 0.7 - 13 km WSW of Searles Valley, CA',
         },
     ]
+
+
+@pytest.mark.parametrize("reading, expected_value", [
+    ({'lat': 27.3, 'lon': -2.32923, 'magnitude': 2.3, 'magtype': 'ml'}, True),
+    ({'lat': None, 'lon': -2.32923, 'magnitude': 2.3, 'magtype': 'ml'}, False),
+    ({'lat': 27.3, 'lon': None, 'magnitude': 2.3, 'magtype': 'ml'}, False),
+    ({'lat': 27.3, 'lon': -2.32923, 'magnitude': None, 'magtype': 'ml'}, False),
+    ({'lat': 27.3, 'lon': -2.32923, 'magnitude': 2.3, 'magtype': None}, False),
+])
+def test_is_valid_earthquake_data(reading, expected_value):
+    assert is_valid_earthquake_data(reading) == expected_value
