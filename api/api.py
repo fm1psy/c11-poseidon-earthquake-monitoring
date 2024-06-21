@@ -24,19 +24,21 @@ def get_connection() -> connection:
 
 def get_cursor(conn: connection) -> cursor:
     """Return a cursor object based on the connection passed."""
-    return conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
 
 def get_all_earthquakes() -> list[dict]:
     """Return a list of all earthquake data from the database."""
     conn = get_connection()
 
-    search_query = """SELECT * FROM earthquakes
-    JOIN magtypes ON magtypes.magtype_id= earthquakes.magtype_id
-    JOIN statuses ON statuses.status_id= earthquakes.status_id
-    JOIN types ON types.type_id= earthquakes.type_id
-    JOIN networks ON networks.network_id= earthquakes.network_id
-    JOIN alerts ON alerts.alert_id= earthquakes.alert_id
+    search_query = """SELECT e.earthquake_id,e.magnitude,e.lon,e.lat,e.time,e.felt,e.cdi,e.mmi,
+    e.significance,e.nst,e.dmin,e.gap,e.title,e.depth,
+    mt.magtype_value as magtype, s.status, t.type_value as cause_of_event, n.network_name, a.alert_value as alert FROM earthquakes AS e
+    LEFT JOIN magtypes AS mt USING(magtype_id)
+    LEFT JOIN statuses AS s USING(status_id)
+    LEFT JOIN types AS t USING(type_id)
+    LEFT JOIN networks AS n USING(network_id)
+    LEFT JOIN alerts AS a USING(alert_id)
     """
     with get_cursor(conn) as cur:
         cur.execute(f"{search_query};")
