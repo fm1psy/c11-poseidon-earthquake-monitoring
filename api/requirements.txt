@@ -1,5 +1,5 @@
 pylint
 pytest
-Flask
+flask
 python-dotenv
 psycopg2
