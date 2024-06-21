@@ -3,3 +3,5 @@ pytest
 pylint
 logging
 pytest-cov
+python-dotenv
+psycopg2
