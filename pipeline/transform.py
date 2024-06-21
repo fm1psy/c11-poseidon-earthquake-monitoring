@@ -8,8 +8,8 @@ import logging
 PAGER_ALERT_LEVELS = ['green', 'yellow', 'orange', 'red']
 READING_STATUS = ['automatic', 'reviewed', 'deleted']
 NETWORK_NAME_LENGTH = 2
-MAX_MAGNITUDE = 10.0
-MIN_MAGNITUDE = -1.0
+MAX_MAGNITUDE = 12.0
+MIN_MAGNITUDE = -10.0
 MAX_LON = 180.0
 MIN_LON = -180.0
 MAX_LAT = 90.0
