@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 import psycopg2.extras
 
 from extract import extract_process
-from transform import transform_process
+from transform_two import transform_process
 
 load_dotenv()
 
@@ -21,6 +21,7 @@ DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_PORT = os.getenv('DB_PORT')
 ALERT = "alert"
 STATUS = "status"
+NETWORK_ID = "network_id"
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s %(levelname)s %(message)s")
@@ -38,7 +39,8 @@ def get_connection(host: str, name: str, user: str, password: str, port: str) ->
             f"OperationalError occurred while trying to connect to the database: {e}")
         return None
     except Exception as e:
-        logging.error(f"An unexpected error occurred: {e}")
+        logging.error(
+            f"An unexpected error occurred in establishing connection: {e}")
         return None
 
 
@@ -54,7 +56,8 @@ def get_cursor(conn: connection) -> cursor:
             f"OperationalError occurred while trying to create a cursor: {e}")
         return None
     except Exception as e:
-        logging.error(f"An unexpected error occurred: {e}")
+        logging.error(
+            f"An unexpected error occurred in creating a cursor: {e}")
         return None
 
 
@@ -66,22 +69,24 @@ def execute_query(cursor: cursor, query: str) -> list:
     except OperationalError as e:
         logging.error(f"OperationalError occurred while executing query: {e}")
     except Exception as e:
-        logging.error(f"An unexpected error occurred: {e}")
+        logging.error(
+            f"An unexpected error occurred while executing query: {e}")
     return None
 
 
-def execute_insert(conn: connection, cursor: cursor, query: str, args: tuple) -> int:
+def execute_insert(conn: connection, cursor: cursor, query: str, args: tuple, column_wanted: str) -> int:
     """Executes an insert query and returns the new ID"""
     try:
         cursor.execute(query, args)
-        new_id = cursor.fetchone()[0]
+        new_id = cursor.fetchone()[column_wanted]
         conn.commit()
         return new_id
     except (psycopg2.IntegrityError, psycopg2.OperationalError, psycopg2.DatabaseError) as e:
         logging.error(f"Database error: {e}")
         conn.rollback()
     except Exception as e:
-        logging.error(f"Unexpected error: {e}")
+        logging.error(
+            f"Unexpected error occurred while adding to the database: {e}")
         conn.rollback()
     return None
 
@@ -101,7 +106,7 @@ def get_all_alerts(cursor: cursor) -> dict:
 
 def get_all_networks(cursor: cursor) -> dict:
     "Fetches all network values from RDS"
-    return fetch_all(cursor, "networks", "network_name", "network_id")
+    return fetch_all(cursor, "networks", "network_name", NETWORK_ID)
 
 
 def get_all_statuses(cursor: cursor) -> dict:
@@ -131,8 +136,13 @@ def get_or_add_id(value: str, all_items: dict, add_to_db_function) -> int:
 
 def add_network_to_db(conn: connection, cursor: cursor, network_value: str) -> int:
     """Adds the network value to the RDS"""
-    query = """INSERT INTO networks (network_name) VALUES (%s) RETURNING network_id"""
-    return execute_insert(conn, cursor, query, (network_value,))
+    try:
+        query = """INSERT INTO networks (network_name) VALUES (%s) RETURNING network_id"""
+        return execute_insert(conn, cursor, query, (network_value,), "network_id")
+    except Exception as e:
+        logging.error(f"Failed to add network '{
+                      network_value}' to database: {e}")
+        raise
 
 
 def get_network_id(conn: connection, cursor: cursor, network_value: str, all_networks: dict) -> int:
@@ -143,7 +153,7 @@ def get_network_id(conn: connection, cursor: cursor, network_value: str, all_net
 def add_magtype_to_db(conn: connection, cursor: cursor, magtype_value: str) -> int:
     """Adds the magType value to the RDS"""
     query = """INSERT INTO magtypes (magtype_value) VALUES (%s) RETURNING magtype_id"""
-    return execute_insert(conn, cursor, query, (magtype_value,))
+    return execute_insert(conn, cursor, query, (magtype_value,), "magtype_id")
 
 
 def get_magtype_id(conn: connection, cursor: cursor, magtype_value: str, all_magtypes: dict) -> int:
@@ -154,7 +164,7 @@ def get_magtype_id(conn: connection, cursor: cursor, magtype_value: str, all_mag
 def add_type_to_db(conn: connection, cursor: cursor, earthquake_type: str) -> int:
     """Adds the earthquake type to the RDS"""
     query = """INSERT INTO types (type_value) VALUES (%s) RETURNING type_id"""
-    return execute_insert(conn, cursor, query, (earthquake_type,))
+    return execute_insert(conn, cursor, query, (earthquake_type,), "type_id")
 
 
 def get_type_id(conn: connection, cursor: cursor, earthquake_type: str, all_types: dict) -> int:
@@ -166,6 +176,7 @@ def add_earthquake_data_to_rds(conn: connection, cursor: cursor, earthquake_data
     """Adds the provided data to the 'earthquakes' table"""
     try:
         for earthquake in earthquake_data:
+            print(earthquake)
             alert_id = all_alerts.get(earthquake.get(ALERT))
             status_id = all_statuses.get(earthquake["status"])
             network_id = get_network_id(
@@ -189,7 +200,7 @@ def add_earthquake_data_to_rds(conn: connection, cursor: cursor, earthquake_data
         logging.error(f"Database error: {e}")
         conn.rollback()
     except Exception as e:
-        logging.error(f"Unexpected error: {e}")
+        logging.error(f"Unexpected error while adding earthquake data: {e}")
         conn.rollback()
 
 

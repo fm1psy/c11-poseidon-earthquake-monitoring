@@ -2,13 +2,17 @@
 # pylint: disable=W0718
 
 import datetime
+import logging
 
 import requests
 
-URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson"
+URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson"
 FEATURES = "features"
 PROPERTIES = "properties"
 TIME = "time"
+
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s %(levelname)s %(message)s")
 
 
 def get_time_from_epoch_time(time_in_ms: int) -> str:
@@ -29,16 +33,18 @@ def get_all_earthquake_data(data_url: str) -> list[dict]:
     try:
         response = requests.get(data_url, timeout=30)
     except requests.exceptions.Timeout as e:
-        print(f"Timeout occurred in get_all_earthquake_data: {e}")
+        logging.error(f"Timeout occurred in get_all_earthquake_data: {e}")
         return []
     except requests.exceptions.RequestException as e:
-        print(f"RequestException occurred in get_all_earthquake_data: {e}")
+        logging.error(
+            f"RequestException occurred in get_all_earthquake_data: {e}")
         return []
 
     response.raise_for_status()
     data = response.json()
     if FEATURES not in data:
         raise KeyError(f"Expected key '{FEATURES}' not found in the response")
+    logging.info("Fetched all data")
     return data[FEATURES]
 
 
@@ -50,16 +56,18 @@ def get_current_earthquake_data(all_earthquake_data: list[dict]) -> list[dict]:
         time_to_compare_to_formatted = time_to_compare_to.strftime("%H:%M")
         latest_earthquakes = []
 
+        logging.info("Extracting recent earthquakes")
         for earthquake in all_earthquake_data:
             if PROPERTIES in earthquake and TIME in earthquake[PROPERTIES]:
                 # if get_time_from_epoch_time(earthquake[PROPERTIES][TIME]) == time_to_compare_to_formatted or get_time_from_epoch_time(earthquake[PROPERTIES]["updated"]) == time_to_compare_to_formatted:
                 latest_earthquakes.append(earthquake)
             else:
-                print("Skipping data, keys are missing")
+                logging.info("Skipping data, keys are missing")
                 continue
         return latest_earthquakes
     except Exception as e:
-        print(f"Unexpected error occurred in get_current_earthquake_data: {e}")
+        logging.error(
+            f"Unexpected error occurred in get_current_earthquake_data: {e}")
         return latest_earthquakes
 
 
@@ -70,7 +78,7 @@ def extract_process() -> list[dict]:
         relevant_data = get_current_earthquake_data(all_data)
         return relevant_data
     except Exception as e:
-        print(f"Error occurred in the extract process: {e}")
+        logging.error(f"Error occurred in the extract process: {e}")
         return relevant_data
 
 

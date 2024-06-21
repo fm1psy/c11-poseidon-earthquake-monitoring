@@ -95,7 +95,7 @@ def get_earthquake_data(data: dict) -> dict:
     network = get_earthquake_property(data, 'net')  # validate_network
     magtype = get_earthquake_property(data, 'magType')  # validate_types
     earthquake_type = get_earthquake_property(data, 'type')  # validate_types
-    magnitude = get_earthquake_property(data, 'mag') #validate_reading
+    magnitude = get_earthquake_property(data, 'mag')  # validate_reading
     lon = get_earthquake_geometry(data, 'lon')  # validate_reading
     lat = get_earthquake_geometry(data, 'lat')  # validate_reading
     depth = get_earthquake_geometry(data, 'depth')  # validate_reading
@@ -239,7 +239,8 @@ def validate_network(network: str) -> str | None:
         return None
 
     if len(network) != NETWORK_NAME_LENGTH:
-        logging.error(f'Invalid length for network: expected {NETWORK_NAME_LENGTH}')
+        logging.error(f'Invalid length for network: expected {
+                      NETWORK_NAME_LENGTH}')
         return None
 
     return network
@@ -346,4 +347,5 @@ def transform_process(extracted_data: list[dict]) -> list[dict]:
 
 if __name__ == "__main__":
     all_data = extract_process()
+    print(all_data)
     transformed_data = transform_process(all_data)
