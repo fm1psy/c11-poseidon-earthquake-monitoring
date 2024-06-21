@@ -3,7 +3,7 @@ earthquake data. Whether it be an amateur developer or a seasoned researcher, th
 be easy to make the most out of through its endpoints."""
 from os import environ as env
 from dotenv import load_dotenv
-from flask import Flask, Response
+from flask import Flask, Response, request
 import psycopg2
 import psycopg2.extras
 from psycopg2.extensions import connection, cursor
@@ -56,7 +56,6 @@ def endpoint_index() -> Response:
 @app.route("/earthquakes", methods=["GET"])
 def get_earthquakes() -> Response:
     """This endpoint returns a list containing data on every earthquake in our system."""
-
     try:
         earthquakes = get_all_earthquakes()
         return earthquakes, 200
@@ -65,6 +64,5 @@ def get_earthquakes() -> Response:
 
 
 if __name__ == "__main__":
-
     load_dotenv()
     app.run(debug=True, host="0.0.0.0", port=5000)

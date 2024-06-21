@@ -20,7 +20,9 @@ def test_endpoint_index(client):
     assert "message" in response.json
 
 
-def test_endpoint_get_earthquakes(client):
+@patch("api.get_all_earthquakes")
+def test_endpoint_get_earthquakes(mock_all_earthquakes, client):
+    mock_all_earthquakes.return_value = [{"test": "output"}]
     response = client.get("/earthquakes")
     assert response.status_code == 200
     assert isinstance(response.json, list)
