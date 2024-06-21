@@ -225,8 +225,7 @@ def validate_types(eq_type: str, eq_type_name: str) -> str | None:
     This function validates readings for :magtype and type.
     """
     if not isinstance(eq_type, str):
-        logging.error(f'Invalid data type: expected a string for "{
-                      eq_type_name}"')
+        logging.error(f'Invalid data type: expected a string for "{eq_type_name}"')
         return None
 
     return eq_type
