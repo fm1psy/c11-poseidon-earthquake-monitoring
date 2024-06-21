@@ -6,7 +6,7 @@ import logging
 
 import requests
 
-URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson"
+URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson"
 FEATURES = "features"
 PROPERTIES = "properties"
 TIME = "time"
@@ -59,8 +59,8 @@ def get_current_earthquake_data(all_earthquake_data: list[dict]) -> list[dict]:
         logging.info("Extracting recent earthquakes")
         for earthquake in all_earthquake_data:
             if PROPERTIES in earthquake and TIME in earthquake[PROPERTIES]:
-                # if get_time_from_epoch_time(earthquake[PROPERTIES][TIME]) == time_to_compare_to_formatted or get_time_from_epoch_time(earthquake[PROPERTIES]["updated"]) == time_to_compare_to_formatted:
-                latest_earthquakes.append(earthquake)
+                if get_time_from_epoch_time(earthquake[PROPERTIES][TIME]) == time_to_compare_to_formatted or get_time_from_epoch_time(earthquake[PROPERTIES]["updated"]) == time_to_compare_to_formatted:
+                    latest_earthquakes.append(earthquake)
             else:
                 logging.info("Skipping data, keys are missing")
                 continue

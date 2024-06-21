@@ -22,13 +22,15 @@ DB_PORT = os.getenv('DB_PORT')
 ALERT = "alert"
 STATUS = "status"
 NETWORK_ID = "network_id"
+MAGTYPE_ID = "magtype_id"
+TYPE_ID = "type_id"
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s %(levelname)s %(message)s")
 
 
 def get_connection(host: str, name: str, user: str, password: str, port: str) -> connection:
-    '''Creates a psycopg2 connection'''
+    """Creates a psycopg2 connection"""
     try:
         conn = psycopg2.connect(host=host, dbname=name,
                                 user=user, password=password, port=port)
@@ -45,7 +47,7 @@ def get_connection(host: str, name: str, user: str, password: str, port: str) ->
 
 
 def get_cursor(conn: connection) -> cursor:
-    '''Creates a cursor based on provided psycopg2 connection'''
+    """Creates a cursor based on provided psycopg2 connection"""
     logging.info("Creating a cursor from the psycopg2 connection")
     try:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -116,18 +118,20 @@ def get_all_statuses(cursor: cursor) -> dict:
 
 def get_all_magtypes(cursor: cursor) -> dict:
     "Fetches all magtypes values from RDS"
-    return fetch_all(cursor, "magtypes", "magtype_value", "magtype_id")
+    return fetch_all(cursor, "magtypes", "magtype_value", MAGTYPE_ID)
 
 
 def get_all_types(cursor: cursor) -> dict:
     "Fetches all earthquake types from RDS"
-    return fetch_all(cursor, "types", "type_value", "type_id")
+    return fetch_all(cursor, "types", "type_value", TYPE_ID)
 
 
 def get_or_add_id(value: str, all_items: dict, add_to_db_function) -> int:
     """Retrieves the ID for a given value, adding it to the database if not present"""
+    logging.info(f"Retrieving ID for {value}")
     if value in all_items:
         return all_items[value]
+    logging.info(f"{value} doesn't exist in database - inserting it now")
     new_id = add_to_db_function(value)
     if new_id is not None:
         all_items[value] = new_id
@@ -136,13 +140,8 @@ def get_or_add_id(value: str, all_items: dict, add_to_db_function) -> int:
 
 def add_network_to_db(conn: connection, cursor: cursor, network_value: str) -> int:
     """Adds the network value to the RDS"""
-    try:
-        query = """INSERT INTO networks (network_name) VALUES (%s) RETURNING network_id"""
-        return execute_insert(conn, cursor, query, (network_value,), "network_id")
-    except Exception as e:
-        logging.error(f"Failed to add network '{
-                      network_value}' to database: {e}")
-        raise
+    query = """INSERT INTO networks (network_name) VALUES (%s) RETURNING network_id"""
+    return execute_insert(conn, cursor, query, (network_value,), NETWORK_ID)
 
 
 def get_network_id(conn: connection, cursor: cursor, network_value: str, all_networks: dict) -> int:
@@ -153,7 +152,7 @@ def get_network_id(conn: connection, cursor: cursor, network_value: str, all_net
 def add_magtype_to_db(conn: connection, cursor: cursor, magtype_value: str) -> int:
     """Adds the magType value to the RDS"""
     query = """INSERT INTO magtypes (magtype_value) VALUES (%s) RETURNING magtype_id"""
-    return execute_insert(conn, cursor, query, (magtype_value,), "magtype_id")
+    return execute_insert(conn, cursor, query, (magtype_value,), MAGTYPE_ID)
 
 
 def get_magtype_id(conn: connection, cursor: cursor, magtype_value: str, all_magtypes: dict) -> int:
@@ -164,7 +163,7 @@ def get_magtype_id(conn: connection, cursor: cursor, magtype_value: str, all_mag
 def add_type_to_db(conn: connection, cursor: cursor, earthquake_type: str) -> int:
     """Adds the earthquake type to the RDS"""
     query = """INSERT INTO types (type_value) VALUES (%s) RETURNING type_id"""
-    return execute_insert(conn, cursor, query, (earthquake_type,), "type_id")
+    return execute_insert(conn, cursor, query, (earthquake_type,), TYPE_ID)
 
 
 def get_type_id(conn: connection, cursor: cursor, earthquake_type: str, all_types: dict) -> int:
@@ -176,6 +175,7 @@ def add_earthquake_data_to_rds(conn: connection, cursor: cursor, earthquake_data
     """Adds the provided data to the 'earthquakes' table"""
     try:
         for earthquake in earthquake_data:
+            print(f"adding data {x}")
             print(earthquake)
             alert_id = all_alerts.get(earthquake.get(ALERT))
             status_id = all_statuses.get(earthquake["status"])
