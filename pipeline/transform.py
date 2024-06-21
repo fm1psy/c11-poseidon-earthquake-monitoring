@@ -240,8 +240,7 @@ def validate_network(network: str) -> str | None:
         return None
 
     if len(network) != NETWORK_NAME_LENGTH:
-        logging.error(f'Invalid length for "network": expected {
-                      NETWORK_NAME_LENGTH}')
+        logging.error(f'Invalid length for "network": expected {NETWORK_NAME_LENGTH}')
         return None
 
     return network
@@ -297,8 +296,7 @@ def validate_reading(reading: float | int, reading_type: str) -> None | float | 
     min_value = reading_types[reading_type][1]
 
     if not isinstance(reading, (float, int)) or isinstance(reading, bool):
-        logging.error(f'Invalid data type: expected a number for "{
-                      reading_type}"')
+        logging.error(f'Invalid data type: expected a number for "{reading_type}"')
         return None
 
     if not min_value <= reading <= max_value:
