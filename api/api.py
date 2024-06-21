@@ -27,7 +27,7 @@ def get_cursor(conn: connection) -> cursor:
     return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
 
-def get_all_earthquakes() -> list[dict]:
+def get_all_earthquakes(status_filter: str) -> list[dict]:
     """Return a list of all earthquake data from the database."""
     conn = get_connection()
 
@@ -40,6 +40,8 @@ def get_all_earthquakes() -> list[dict]:
     LEFT JOIN networks AS n USING(network_id)
     LEFT JOIN alerts AS a USING(alert_id)
     """
+
+    search_query += f"""WHERE s.status = '{status_filter}'"""
     with get_cursor(conn) as cur:
         cur.execute(f"{search_query};")
         fetched_earthquakes = cur.fetchall()
@@ -57,7 +59,8 @@ def endpoint_index() -> Response:
 def get_earthquakes() -> Response:
     """This endpoint returns a list containing data on every earthquake in our system."""
     try:
-        earthquakes = get_all_earthquakes()
+        status_filter = request.args.get("status")
+        earthquakes = get_all_earthquakes(status_filter)
         return earthquakes, 200
     except Exception as e:  # pylint: disable=broad-exception-caught
         return {"error": str(e)}, 400
