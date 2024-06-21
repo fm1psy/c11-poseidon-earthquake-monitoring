@@ -3,7 +3,6 @@
 import logging
 from datetime import datetime, timezone, timedelta
 from extract import get_time_from_epoch_time, get_all_earthquake_data, get_current_earthquake_data
-from unittest.mock import MagicMock, patch
 import pytest
 
 
