@@ -42,8 +42,7 @@ def get_earthquake_property(data: dict, property_name: str) -> int | str | None:
         return data['properties'][property_name]
 
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {
-                      e} in getting "{property_name}"')
+        logging.error(f'An unexpected error occurred: {e} in getting "{property_name}"')
         return None
 
 
@@ -69,8 +68,7 @@ def get_earthquake_geometry(data: dict, geometry_param: str) -> int | None:
         return data['geometry']['coordinates'][geometry_index[geometry_param]]
 
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {
-                      e} in getting "{geometry_param}"')
+        logging.error(f'An unexpected error occurred: {e} in getting "{geometry_param}"')
         return None
 
 
@@ -84,8 +82,7 @@ def get_earthquake_id(data: dict) -> str | None:
             return None
         return data['id']
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {
-                      e} in getting "earthquake id"')
+        logging.error(f'An unexpected error occurred: {e} in getting "earthquake id"')
         return None
 
 
@@ -229,8 +226,7 @@ def validate_types(eq_type: str, eq_type_name: str) -> str | None:
     This function validates readings for :magtype and type.
     """
     if not isinstance(eq_type, str):
-        logging.error(f'Invalid data type: expected a string for "{
-                      eq_type_name}"')
+        logging.error(f'Invalid data type: expected a string for "{eq_type_name}"')
         return None
 
     return eq_type
@@ -245,8 +241,7 @@ def validate_network(network: str) -> str | None:
         return None
 
     if len(network) != NETWORK_NAME_LENGTH:
-        logging.error(f'Invalid length for "network": expected {
-                      NETWORK_NAME_LENGTH}')
+        logging.error(f'Invalid length for "network": expected {NETWORK_NAME_LENGTH}')
         return None
 
     return network
@@ -302,8 +297,7 @@ def validate_reading(reading: float | int, reading_type: str) -> None | float | 
     min_value = reading_types[reading_type][1]
 
     if not isinstance(reading, (float, int)) or isinstance(reading, bool):
-        logging.error(f'Invalid data type: expected a number for "{
-                      reading_type}"')
+        logging.error(f'Invalid data type: expected a number for "{reading_type}"')
         return None
 
     if not min_value <= reading <= max_value:
