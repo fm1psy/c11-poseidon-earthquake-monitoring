@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 import psycopg2.extras
 
 from extract import extract_process
-from transform_two import transform_process
+from transform import transform_process
 
 load_dotenv()
 
@@ -175,8 +175,6 @@ def add_earthquake_data_to_rds(conn: connection, cursor: cursor, earthquake_data
     """Adds the provided data to the 'earthquakes' table"""
     try:
         for earthquake in earthquake_data:
-            print(f"adding data {x}")
-            print(earthquake)
             alert_id = all_alerts.get(earthquake.get(ALERT))
             status_id = all_statuses.get(earthquake["status"])
             network_id = get_network_id(

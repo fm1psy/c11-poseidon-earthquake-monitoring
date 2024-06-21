@@ -10,6 +10,7 @@ URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojso
 FEATURES = "features"
 PROPERTIES = "properties"
 TIME = "time"
+UPDATED = "updated"
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s %(levelname)s %(message)s")
@@ -58,8 +59,8 @@ def get_current_earthquake_data(all_earthquake_data: list[dict]) -> list[dict]:
 
         logging.info("Extracting recent earthquakes")
         for earthquake in all_earthquake_data:
-            if PROPERTIES in earthquake and TIME in earthquake[PROPERTIES]:
-                if get_time_from_epoch_time(earthquake[PROPERTIES][TIME]) == time_to_compare_to_formatted or get_time_from_epoch_time(earthquake[PROPERTIES]["updated"]) == time_to_compare_to_formatted:
+            if PROPERTIES in earthquake and (TIME in earthquake[PROPERTIES] or UPDATED in earthquake[PROPERTIES]):
+                if get_time_from_epoch_time(earthquake[PROPERTIES][TIME]) == time_to_compare_to_formatted or get_time_from_epoch_time(earthquake[PROPERTIES][UPDATED]) == time_to_compare_to_formatted:
                     latest_earthquakes.append(earthquake)
             else:
                 logging.info("Skipping data, keys are missing")

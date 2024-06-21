@@ -1,6 +1,6 @@
 # pylint: skip-file
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -12,8 +12,8 @@ def mock_requests_get():
 
 
 @pytest.fixture
-def get_current_epoch_time():
-    current_time = datetime.now(timezone.utc)
+def get_epoch_time():
+    current_time = datetime.now(timezone.utc) - timedelta(minutes=1)
     return int(current_time.timestamp() * 1000)
 
 
@@ -117,14 +117,14 @@ def get_test_data_with_random_time():
 
 
 @pytest.fixture
-def get_test_data_with_current_time(get_current_epoch_time):
+def get_test_data_with_minute_old_time(get_epoch_time):
     return [
         {
             "type": "Feature",
             "properties": {
                 "mag": 3.2,
                 "place": "88 km NW of Yakutat, Alaska",
-                "time": get_current_epoch_time,
+                "time": get_epoch_time,
                 "updated": 1718710240631,
                 "tz": None,
                 "url": "https://earthquake.usgs.gov/earthquakes/eventpage/ak0247tc2ogk",
@@ -217,7 +217,6 @@ def get_test_data_without_time():
             "properties": {
                 "mag": 3.2,
                 "place": "88 km NW of Yakutat, Alaska",
-                "updated": 1718710240631,
                 "tz": None,
                 "url": "https://earthquake.usgs.gov/earthquakes/eventpage/ak0247tc2ogk",
                 "detail": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/ak0247tc2ogk.geojson",
