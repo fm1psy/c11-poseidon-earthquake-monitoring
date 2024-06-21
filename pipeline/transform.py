@@ -41,8 +41,7 @@ def get_earthquake_property(data: dict, property_name: str) -> int | str | None:
         return data['properties'][property_name]
 
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {
- e} in getting "{property_name}"')
+        logging.error(f'An unexpected error occurred: {e} in getting "{property_name}"')
         return None
 
 
@@ -68,8 +67,7 @@ def get_earthquake_geometry(data: dict, geometry_param: str) -> int | None:
         return data['geometry']['coordinates'][geometry_index[geometry_param]]
 
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {
-                      e} in getting "{geometry_param}"')
+        logging.error(f'An unexpected error occurred: {e} in getting "{geometry_param}"')
         return None
 
 
@@ -83,8 +81,7 @@ def get_earthquake_id(data: dict) -> str | None:
             return None
         return data['id']
     except Exception as e:
-        logging.error(f'An unexpected error occurred: {
-                      e} in getting "earthquake id"')
+        logging.error(f'An unexpected error occurred: {e} in getting "earthquake id"')
         return None
 
 
@@ -362,5 +359,3 @@ def transform_process(extracted_data: list[dict]) -> list[dict]:
     valid_data = [data for data in cleaned_data if is_valid_earthquake_data(data)]
 
     return valid_data
-
- 
