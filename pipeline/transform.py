@@ -356,3 +356,9 @@ def transform_process(extracted_data: list[dict]) -> list[dict]:
     valid_data = [data for data in cleaned_data if is_valid_earthquake_data(data)]
 
     return valid_data
+
+
+if __name__ == "__main__":
+    import extract
+    extract_data = extract.extract_process()
+    print(transform_process(extract_data))
