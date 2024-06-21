@@ -461,7 +461,7 @@ def test_validate_reading_invalid_format(reading, reading_type, expected_value, 
 
 
 @pytest.mark.parametrize("reading, reading_type, expected_value", [
-    (11, 'mag', None),
+    (19, 'mag', None),
     (-20, 'mag', None),
     (-197.2378, 'lon', None),
     (180.1, 'lon', None),
