@@ -464,3 +464,33 @@ def example_erroneous_reading():
         },
         'id': 'c3820fd332'
     }
+
+
+@pytest.fixture
+def example_transformed_data(get_epoch_time):
+    return [{
+        "earthquake_id": "ak0247tc2ogk",
+        "alert": "green",
+        "status": "automatic",
+        "network": "ak",
+        "magtype": "ml",
+        "earthquake_type": "earthquake",
+        "magnitude": 3.2,
+        "lon": -140.7726,
+        "lat": 60.1438,
+        "depth": 0,
+        "time": get_epoch_time,
+        "felt": None,
+        "cdi": None,
+        "mmi": None,
+        "significance": 158,
+        "nst": None,
+        "dmin": None,
+        "gap": None,
+        "title": "M 3.2 - 88 km NW of Yakutat, Alaska"
+    }]
+
+
+@pytest.fixture
+def example_id_tables():
+    return {"green": 1}, {"automatic": 1, "reviewed": 2}, {"ak": 1}, {"ml": 1}, {"earthquake": 1}

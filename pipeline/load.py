@@ -202,7 +202,7 @@ def add_earthquake_data_to_rds(conn: connection, cursor: cursor, earthquake_data
         conn.rollback()
 
 
-if __name__ == "__main__":
+def load_process() -> None:
     all_data = extract_process()
     transformed_data = transform_process(all_data)
 
@@ -218,3 +218,10 @@ if __name__ == "__main__":
 
             add_earthquake_data_to_rds(
                 conn, cur, transformed_data, all_alerts, all_statuses, all_networks, all_magtypes, all_types)
+
+    cur.close()
+    conn.close()
+
+
+if __name__ == "__main__":
+    load_process()
