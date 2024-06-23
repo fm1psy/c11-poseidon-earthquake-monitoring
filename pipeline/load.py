@@ -192,8 +192,7 @@ def add_earthquake_data_to_rds(conn: connection, cursor: cursor, earthquake_data
                                   earthquake["significance"], earthquake["nst"], earthquake["dmin"], earthquake["gap"], earthquake["title"]))
 
             conn.commit()
-            logging.info(f"Successfully added earthquake {
-                         earthquake['earthquake_id']} to the database")
+            logging.info(f"Successfully added earthquake {earthquake['earthquake_id']} to the database")
     except (psycopg2.IntegrityError, psycopg2.OperationalError, psycopg2.DatabaseError) as e:
         logging.error(f"Database error: {e}")
         conn.rollback()
