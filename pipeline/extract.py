@@ -12,9 +12,6 @@ PROPERTIES = "properties"
 TIME = "time"
 UPDATED = "updated"
 
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s %(levelname)s %(message)s")
-
 
 def get_time_from_epoch_time(time_in_ms: int) -> str:
     """Given epoch, it converts it to human-readable format"""
@@ -74,6 +71,9 @@ def get_current_earthquake_data(all_earthquake_data: list[dict]) -> list[dict]:
 
 def extract_process() -> list[dict]:
     """Runs the functions to extract all relevant data"""
+    logging.basicConfig(level=logging.INFO,
+                        format="%(asctime)s %(levelname)s %(message)s")
+
     try:
         all_data = get_all_earthquake_data(URL)
         relevant_data = get_current_earthquake_data(all_data)
