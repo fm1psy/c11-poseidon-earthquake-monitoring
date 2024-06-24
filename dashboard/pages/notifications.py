@@ -133,3 +133,4 @@ def create_subscription_form():
 
 if __name__ == "__main__":
     if create_subscription_form() != []:
+        ...
