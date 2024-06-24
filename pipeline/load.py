@@ -9,9 +9,6 @@ from psycopg2 import OperationalError
 from dotenv import load_dotenv
 import psycopg2.extras
 
-from extract import extract_process
-from transform import transform_process
-
 load_dotenv()
 
 DB_HOST = os.getenv('DB_HOST')
@@ -192,7 +189,8 @@ def add_earthquake_data_to_rds(conn: connection, cursor: cursor, earthquake_data
                                   earthquake["significance"], earthquake["nst"], earthquake["dmin"], earthquake["gap"], earthquake["title"]))
 
             conn.commit()
-            logging.info(f"Successfully added earthquake {earthquake['earthquake_id']} to the database")
+            logging.info(f"Successfully added earthquake {
+                         earthquake['earthquake_id']} to the database")
     except (psycopg2.IntegrityError, psycopg2.OperationalError, psycopg2.DatabaseError) as e:
         logging.error(f"Database error: {e}")
         conn.rollback()
@@ -201,9 +199,9 @@ def add_earthquake_data_to_rds(conn: connection, cursor: cursor, earthquake_data
         conn.rollback()
 
 
-def load_process() -> None:
-    all_data = extract_process()
-    transformed_data = transform_process(all_data)
+def load_process(func_to_extract_data: "function", func_to_transform_data: "function") -> None:
+    all_data = func_to_extract_data()
+    transformed_data = func_to_transform_data(all_data)
 
     conn = get_connection(DB_HOST, DB_NAME, DB_USERNAME, DB_PASSWORD, DB_PORT)
     if conn:
@@ -223,4 +221,6 @@ def load_process() -> None:
 
 
 if __name__ == "__main__":
-    load_process()
+    from extract import extract_process
+    from transform import transform_process
+    load_process(extract_process, transform_process)
