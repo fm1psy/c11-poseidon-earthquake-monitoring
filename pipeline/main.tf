@@ -17,8 +17,8 @@ resource "aws_scheduler_schedule" "pipeline_scheduler" {
   schedule_expression = "cron(* * * * ? *)"
 
   target {
-    arn      = "" # TO FILL
-    role_arn = "" # TO FILL
+    arn      = "" # TO BE FILLED
+    role_arn = "" # TO BE FILLED
     
   }
 }
