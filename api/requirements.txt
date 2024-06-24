@@ -2,4 +2,4 @@ pylint
 pytest
 flask
 python-dotenv
-psycopg2
+psycopg2-binary
