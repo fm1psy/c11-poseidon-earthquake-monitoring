@@ -22,7 +22,8 @@ This folder is responsible for the pipeline logic used to extract, transform and
 2. Setup the following environmental variables in a `.env` file:
     | Variable Name | Value |
     | ------------- | ----- |
-    | DB_HOST | The public URL of your database. |
+    | DB_HOST | The public URL of the database. |
+    | DB_NAME | The name of the database. |
     | DB_USERNAME | The username that you will be using to interact with the database. |
     | DB_PASSWORD | The password required to interact with the database. |
     | DB_PORT | The port the database is listening to. |
