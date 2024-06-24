@@ -7,10 +7,11 @@ from extract import extract_process
 from transform import transform_process
 from load import load_process
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
 
-if __name__ == "__main__":
+def run_pipeline():
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s - %(levelname)s - %(message)s')
+    
     logging.info('Starting pipeline')
 
     try:
@@ -28,3 +29,7 @@ if __name__ == "__main__":
         logging.info('Pipeline completed running')
     except Exception as e:
         logging.error(f'Error during load: {e}')
+
+
+if __name__ == "__main__":
+    run_pipeline()
