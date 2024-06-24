@@ -4,10 +4,20 @@ import folium
 import boto3
 from os import environ
 from dotenv import load_dotenv
-
+import psycopg2
+from psycopg2.extensions import connection, cursor
+import psycopg2.extras
 
 DEFAULT_LAT = 51.5072
 DEFAULT_LON = 0.1276
+
+
+def get_connection():
+    return psycopg2.connect(host=environ['DB_HOST'],
+                            dbname=environ['DB_NAME'],
+                            user=environ['DB_USER'],
+                            password=environ['DB_PASSWORD'],
+                            port=environ['DB_PORT'])
 
 
 def get_sns_client():
@@ -20,24 +30,13 @@ def get_sns_client():
 
 def create_topic(client, user_info):
     response = client.create_topic(
-        Name='c11-ella-test2',
-        Tags=[{
-            'Key': 'latitude',
-            'Value': str(user_info['selected_lat'])
-        },
-            {
-            'Key': 'longitude',
-            'Value': str(user_info['selected_lon'])
-        },
-            {
-            'Key': 'magnitude',
-            'Value': user_info['magnitude']
-        }]
+        Name=f'{user_info['longitude']
+                }-{user_info['latitude']-{user_info['magnitude']}}'
     )
     return response
 
 
-def subscribe_to_topic(topic_ARN, user_info):
+def subscribe_to_topic(client, topic_ARN, user_info):
     email_response = client.subscribe(
         TopicArn=topic_ARN['TopicArn'],
         Protocol='email',
@@ -48,32 +47,56 @@ def subscribe_to_topic(topic_ARN, user_info):
         Protocol='sms',
         Endpoint=user_info['phone_number']
     )
-    return email_response
+    return email_response, sms_response
 
 
-def check_if_topic_exists(client, user_info):
-    topics = client.list_topics()['Topics']
-
-    for topic in topics:
-        latitude = False
-        longitude = False
-        magnitude = False
-        tags = client.list_tags_for_resource(
-            ResourceArn=topic['TopicArn'])['Tags']
-        for tag in tags:
-            if tag['Key'] == 'latitude' and tag['Value'] == str(user_info['selected_lat']):
-                latitude = True
-            elif tag['Key'] == 'longitude' and tag['Value'] == str(user_info['selected_lon']):
-                longitude = True
-            elif tag['Key'] == 'magnitude' and tag['Value'] == user_info['magnitude']:
-                magnitude = True
-        if latitude and longitude and magnitude:
-            return topic['TopicArn']
+def check_if_topic_exists(conn, user_info):
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+        cursor.execute(f"""select topic_id, topic_arn from topics
+                            where min_magnitude = {user_info['magnitude']} and longitude = {user_info['selected_lon']} and latitude = {user_info['selected_lat']} """)
+    result = cursor.fetchall()
+    if len(result) >= 1:
+        return cursor.fetchone()
     return None
 
 
-def unsubscribe_to_topic():
-    ...
+def upload_user_to_database(conn, user_info):
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+        cursor.execute(f"""insert {user_info['email']}, {
+                       user_info['phone']}, into users""")
+        cursor.execute(f""""insert {user_info}""")
+
+
+def check_if_user_exists(conn, user_info):
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+        cursor.execute(f"""select user_id from users
+                            where email_address = {user_info['email']} and phone_number = {user_info['phone']}""")
+        result = cursor.fetchall()
+    if len(result) == 1:
+        return result
+    elif len(result) == 0:
+        st.write("Error: User not found")
+        return None
+    else:
+        st.write('Error')
+        return None
+
+
+def upload_topic_to_database(conn, user_info, topic_info):
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+        cursor.execute(f"""insert {topic_info['topic_arn']}, {
+                       user_info['magnitude']}, {user_info['selected_lon']}, {user_info['selected_lat']} into topics""")
+
+
+def upload_user_subscription_to_database(conn, user_id, topic_id, email_subscription, sms_subscription):
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+        cursor.execute(f"""insert {user_id}, {
+                       topic_id}, {email_subscription}, {sms_subscription} into user_topic_assignment""")
+
+
+def unsubscribe_to_topic(client, conn, user_info):
+    if check_if_user_exists(conn, user_info):
+        response = client.unsubscribe()
 
 
 def create_subscription_form():
@@ -105,21 +128,8 @@ def create_subscription_form():
             phone_number}, Position Chosen: {selected_lat}, {selected_lon}, Minimum magnitude chosen: {magnitude}""")
 
         return {'email': email, 'phone_number': phone_number, 'selected_lat': selected_lat, 'selected_lon': selected_lon, 'magnitude': magnitude}
-
     return []
 
 
 if __name__ == "__main__":
-
-    user_info = create_subscription_form()
-    if user_info:
-        client = get_sns_client()
-        if check_if_topic_exists(client, user_info) is None:
-            st.write('topic does not exist')
-            topic_arn = create_topic(client, user_info)
-            st.write(topic_arn)
-        else:
-            st.write('topic already exists')
-        email_response = subscribe_to_topic(topic_arn, user_info)
-
-        st.write(email_response)
+    if create_subscription_form() != []:

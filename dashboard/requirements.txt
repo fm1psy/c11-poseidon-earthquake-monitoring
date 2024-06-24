@@ -2,3 +2,5 @@ streamlit
 streamlit-folium
 boto3
 python-dotenv
+altair
+vega_datasets
