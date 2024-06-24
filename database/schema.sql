@@ -62,8 +62,40 @@ CREATE TABLE earthquakes (
     FOREIGN KEY (magtype_id) REFERENCES magtypes(magtype_id)
 );
 
-INSERT INTO alerts (alert_value) VALUES ('green'), ('yellow'), ('orange'), ('red');
-INSERT INTO networks (network_name) VALUES ('ak'), ('at'), ('ci'), ('hv'), ('ld'), ('mb'), ('nc'), ('nm'), ('nn'), ('pr'), ('pt'), ('se'), ('us'), ('uu'), ('uw');
-INSERT INTO types (type_value) VALUES ('earthquake'), ('quarry');
-INSERT INTO statuses (status) VALUES ('automatic'), ('reviewed'), ('deleted');
-INSERT INTO magtypes (magtype_value) VALUES ('md'), ('ml'), ('ms'), ('mw'), ('me'), ('mi'), ('mb'), ('mlg');
+INSERT INTO alerts (alert_value) VALUES 
+    ('green'), 
+    ('yellow'), 
+    ('orange'), 
+    ('red');
+INSERT INTO networks (network_name) VALUES 
+    ('ak'), 
+    ('at'), 
+    ('ci'), 
+    ('hv'), 
+    ('ld'), 
+    ('mb'), 
+    ('nc'), 
+    ('nm'), 
+    ('nn'), 
+    ('pr'), 
+    ('pt'), 
+    ('se'), 
+    ('us'), 
+    ('uu'), 
+    ('uw');
+INSERT INTO types (type_value) VALUES 
+    ('earthquake'), 
+    ('quarry');
+INSERT INTO statuses (status) VALUES 
+    ('automatic'), 
+    ('reviewed'), 
+    ('deleted');
+INSERT INTO magtypes (magtype_value) VALUES 
+    ('md'), 
+    ('ml'), 
+    ('ms'), 
+    ('mw'), 
+    ('me'), 
+    ('mi'), 
+    ('mb'), 
+    ('mlg');
