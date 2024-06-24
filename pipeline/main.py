@@ -11,9 +11,7 @@ from load import load_process
 def run_pipeline():
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(levelname)s - %(message)s')
-    
     logging.info('Starting pipeline')
-
 
     try:
         extracted_data = extract_process()
@@ -36,4 +34,3 @@ def run_pipeline():
 
 if __name__ == "__main__":
     run_pipeline()
-
