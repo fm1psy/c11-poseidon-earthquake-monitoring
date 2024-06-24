@@ -1,8 +1,6 @@
 """Lambda Handler"""
 
 import traceback
-from os import environ as ENV
-from dotenv import load_dotenv
 from main import run_pipeline
 
 
