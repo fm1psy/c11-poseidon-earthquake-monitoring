@@ -45,7 +45,6 @@ def get_filter_queries(earthquake_filters: dict[str]) -> list[str]:
     magtype = earthquake_filters[MAG_TYPE_FILTER_KEY]
     event = earthquake_filters[EVENT_FILTER_KEY]
     min_magnitude = earthquake_filters[MIN_MAGNITUDE_FILTER_KEY]
-    continent = earthquake_filters[CONTINENT_FILTER_KEY]
     if status is not None:
         res.append(f"s.status = '{status}'")
     if network is not None:
@@ -58,11 +57,17 @@ def get_filter_queries(earthquake_filters: dict[str]) -> list[str]:
         res.append(f"t.type_value = '{event}'")
     if min_magnitude is not None:
         res.append(f"e.magnitude >= '{min_magnitude}'")
-    if continent is not None:
-        # TODO: implement api to get continent filter working
-        res.append("NOT YET IMPLEMENTED")
     res[0] = "WHERE "+res[0]
     return res
+
+
+def filter_by_continent(fetched_data) -> list[dict]:
+    """"""
+    for row in fetched_data:
+        row["lat"] = 0
+        row["lon"] = 0
+
+    return fetched_data
 
 
 def get_all_earthquakes(earthquake_filters: dict[str]) -> list[dict]:
@@ -86,6 +91,8 @@ def get_all_earthquakes(earthquake_filters: dict[str]) -> list[dict]:
         cur.execute(search_query)
         fetched_earthquakes = cur.fetchall()
     conn.close()
+    if earthquake_filters[CONTINENT_FILTER_KEY] is not None:
+        fetched_earthquakes = filter_by_continent(fetched_earthquakes)
     return fetched_earthquakes
 
 
