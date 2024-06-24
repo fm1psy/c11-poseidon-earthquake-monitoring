@@ -17,8 +17,8 @@ resource "aws_scheduler_schedule" "pipeline_scheduler" {
   schedule_expression = "cron(* * * * ? *)"
 
   target {
-    arn      = "" # TO BE FILLED
-    role_arn = "" # TO BE FILLED
+    arn      = aws_lambda_function.pipeline_lambda.arn
+    role_arn = aws_iam_role.pipeline_scheduler_role.arn
     
   }
 }
@@ -48,7 +48,7 @@ resource "aws_iam_policy" "scheduler_execute_pipeline_policy" {
       {
         Effect = "Allow",
         Action = "lambda:InvokeFunction",
-        Resource = "" # TO FILL
+        Resource = aws_lambda_function.pipeline_lambda.arn
       }
     ]
   })
@@ -67,7 +67,7 @@ resource "aws_lambda_function" "pipeline_lambda" {
     function_name = "poseidon-earthquake-pipeline"
     role = aws_iam_role.pipeline_lambda_role.arn
     package_type = "Image"
-    image_uri = "" # TO FILL
+    image_uri = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c11-poseidon-pipeline:latest" # TO FILL
     architectures = ["x86_64"]
     timeout = 45
     environment {
@@ -76,7 +76,7 @@ resource "aws_lambda_function" "pipeline_lambda" {
         DB_NAME = var.DB_NAME
         DB_PASSWORD = var.DB_PASSWORD
         DB_PORT = var.DB_PORT
-        DB_USER = var.DB_USERNAME
+        DB_USERNAME = var.DB_USERNAME
       }
     }
 }
