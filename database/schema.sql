@@ -1,28 +1,38 @@
-DROP TABLE IF EXISTS earthquakes, alerts, networks, magtypes, statuses, types;
+DROP TABLE IF EXISTS earthquakes CASCADE;
+DROP TABLE IF EXISTS alerts CASCADE;
+DROP TABLE IF EXISTS statuses CASCADE;
+DROP TABLE IF EXISTS magtypes CASCADE;
+DROP TABLE IF EXISTS networks CASCADE;
+DROP TABLE IF EXISTS types CASCADE;
 
 CREATE TABLE alerts (
-    alert_id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    alert_value VARCHAR(6) UNIQUE NOT NULL
+    alert_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    alert_value VARCHAR(6) UNIQUE NOT NULL,
+    PRIMARY KEY (alert_id)
 );
 
 CREATE TABLE networks (
-    network_id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    network_name VARCHAR(2) UNIQUE NOT NULL
+    network_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    network_name VARCHAR(2) UNIQUE NOT NULL,
+    PRIMARY KEY (network_id)
 );
 
 CREATE TABLE types (
-    type_id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    type_value VARCHAR(12) UNIQUE NOT NULL
+    type_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    type_value VARCHAR(20) UNIQUE NOT NULL,
+    PRIMARY KEY (type_id)
 );
 
 CREATE TABLE statuses (
-    status_id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    status_value VARCHAR(9) UNIQUE NOT NULL
+    status_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    status VARCHAR(9) UNIQUE NOT NULL,
+    PRIMARY KEY (status_id)
 );
 
 CREATE TABLE magtypes (
-    magtype_id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    magtype_value VARCHAR(3) UNIQUE NOT NULL
+    magtype_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    magtype_value VARCHAR(6) UNIQUE NOT NULL,
+    PRIMARY KEY (magtype_id)
 );
 
 CREATE TABLE earthquakes (
@@ -34,7 +44,7 @@ CREATE TABLE earthquakes (
     felt SMALLINT,
     cdi REAL,
     mmi REAL,
-    alert_id SMALLINT NOT NULL,
+    alert_id SMALLINT,
     status_id SMALLINT NOT NULL,
     significance SMALLINT NOT NULL,
     network_id SMALLINT NOT NULL,
@@ -52,36 +62,40 @@ CREATE TABLE earthquakes (
     FOREIGN KEY (magtype_id) REFERENCES magtypes(magtype_id)
 );
 
-
-INSERT INTO alerts
-    (alert_value)
-VALUES 
-     ('green'), ('yellow'), ('orange'), ('red')
-;
-
-INSERT INTO networks
-    (network_name)
-VALUES 
-     ('ak'), ('at'), ('ci'), ('hv'), ('ld'), 
-     ('mb'), ('nc'), ('nm'), ('nn'), ('pr'), 
-     ('pt'), ('se'), ('us'), ('uu'), ('uw')
-;
-
-INSERT INTO types
-    (type_value)
-VALUES 
-     ('earthquake'), ('quarry')
-;
-
-INSERT INTO statuses
-    (status_value)
-VALUES 
-     ('automatic'), ('reviewed'), ('deleted')
-;
-
-INSERT INTO magtypes
-    (magtype_value)
-VALUES 
-     ('md'), ('ml'), ('ms'), ('mw'), ('me'), 
-     ('mi'), ('mb'), ('mlg')
-;
+INSERT INTO alerts (alert_value) VALUES 
+    ('green'), 
+    ('yellow'), 
+    ('orange'), 
+    ('red');
+INSERT INTO networks (network_name) VALUES 
+    ('ak'), 
+    ('at'), 
+    ('ci'), 
+    ('hv'), 
+    ('ld'), 
+    ('mb'), 
+    ('nc'), 
+    ('nm'), 
+    ('nn'), 
+    ('pr'), 
+    ('pt'), 
+    ('se'), 
+    ('us'), 
+    ('uu'), 
+    ('uw');
+INSERT INTO types (type_value) VALUES 
+    ('earthquake'), 
+    ('quarry');
+INSERT INTO statuses (status) VALUES 
+    ('automatic'), 
+    ('reviewed'), 
+    ('deleted');
+INSERT INTO magtypes (magtype_value) VALUES 
+    ('md'), 
+    ('ml'), 
+    ('ms'), 
+    ('mw'), 
+    ('me'), 
+    ('mi'), 
+    ('mb'), 
+    ('mlg');

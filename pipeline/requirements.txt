@@ -1,7 +1,6 @@
 requests
 pytest
 pylint
-logging
 pytest-cov
 python-dotenv
-psycopg2
+psycopg2-binary
