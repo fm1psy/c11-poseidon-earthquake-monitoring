@@ -30,10 +30,8 @@ def run_pipeline():
     try:
         load_process(transformed_data)
         logging.info('Pipeline completed running')
-        return
     except Exception as e:
         logging.error(f'Error during load: {e}')
-        return
 
 
 if __name__ == "__main__":
