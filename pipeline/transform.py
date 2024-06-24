@@ -2,6 +2,7 @@
 
 """This file is responsible for cleaning and transforming the latest earthquake data"""
 
+from extract import extract_process
 from datetime import datetime, timezone
 import logging
 
@@ -353,7 +354,8 @@ def transform_process(extracted_data: list[dict]) -> list[dict]:
 
     latest_data = [get_earthquake_data(data) for data in extracted_data]
     cleaned_data = [clean_data(data) for data in latest_data]
-    valid_data = [data for data in cleaned_data if is_valid_earthquake_data(data)]
+    valid_data = [
+        data for data in cleaned_data if is_valid_earthquake_data(data)]
 
     return valid_data
 
