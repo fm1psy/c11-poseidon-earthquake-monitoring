@@ -47,20 +47,20 @@ def get_filter_queries(earthquake_filters: dict[str]) -> list[str]:
     min_magnitude = earthquake_filters[min_magnitude_FILTER_KEY]
     continent = earthquake_filters[continent_FILTER_KEY]
     if status is not None:
-        res.append(f"WHERE s.status = '{status}'")
+        res.append(f"s.status = '{status}'")
     if network is not None:
-        res.append(f"WHERE n.network_name = '{network}'")
+        res.append(f"n.network_name = '{network}'")
     if alert is not None:
-        res.append(f"WHERE a.alert_value = '{alert}'")
+        res.append(f"a.alert_value = '{alert}'")
     if magtype is not None:
-        res.append(f"WHERE mt.magtype_value = '{magtype}'")
+        res.append(f"mt.magtype_value = '{magtype}'")
     if event is not None:
-        res.append(f"WHERE t.type_value = '{event}'")
+        res.append(f"t.type_value = '{event}'")
     if min_magnitude is not None:
-        res.append(f"WHERE e.magnitude >= '{min_magnitude}'")
+        res.append(f"e.magnitude >= '{min_magnitude}'")
     if continent is not None:
         res.append("NOT YET IMPLEMENTED")
-
+    res[0] = "WHERE "+res[0]
     return res
 
 

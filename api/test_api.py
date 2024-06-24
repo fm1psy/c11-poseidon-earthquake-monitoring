@@ -110,10 +110,30 @@ def test_get_filter_queries():
 
     assert get_filter_queries(test_filter_dict) == [
         "WHERE s.status = 'status'",
-        "WHERE n.network_name = 'net'",
+        "n.network_name = 'net'",
+        "a.alert_value = 'alert'",
+        "mt.magtype_value = 'magtype'",
+        "t.type_value = 'type'",
+        "e.magnitude >= 'min mag'",
+        "NOT YET IMPLEMENTED"
+    ]
+
+
+def test_get_filter_queries_alert_is_first_filter():
+    test_filter_dict = {
+        status_FILTER_KEY: None,
+        network_FILTER_KEY: None,
+        alert_FILTER_KEY: "alert",
+        mag_type_FILTER_KEY: "magtype",
+        event_FILTER_KEY: "type",
+        min_magnitude_FILTER_KEY: "min mag",
+        continent_FILTER_KEY: "continent"
+    }
+
+    assert get_filter_queries(test_filter_dict) == [
         "WHERE a.alert_value = 'alert'",
-        "WHERE mt.magtype_value = 'magtype'",
-        "WHERE t.type_value = 'type'",
-        "WHERE e.magnitude >= 'min mag'",
+        "mt.magtype_value = 'magtype'",
+        "t.type_value = 'type'",
+        "e.magnitude >= 'min mag'",
         "NOT YET IMPLEMENTED"
     ]
