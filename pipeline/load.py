@@ -126,13 +126,12 @@ def get_all_types(cursor: cursor) -> dict:
 def get_or_add_id(value: str, all_items: dict, add_to_db_function) -> int:
     """Retrieves the ID for a given value, adding it to the database if not present"""
     logging.info(f"Retrieving ID for {value}")
-    if value in all_items:
-        return all_items[value]
-    logging.info(f"{value} doesn't exist in database - inserting it now")
-    new_id = add_to_db_function(value)
-    if new_id is not None:
-        all_items[value] = new_id
-    return new_id
+    if value not in all_items:
+        logging.info(f"{value} doesn't exist in database - inserting it now")
+        new_id = add_to_db_function(value)
+        if new_id is not None:
+            all_items[value] = new_id
+    return all_items.get(value)
 
 
 def add_network_to_db(conn: connection, cursor: cursor, network_value: str) -> int:
@@ -199,10 +198,7 @@ def add_earthquake_data_to_rds(conn: connection, cursor: cursor, earthquake_data
         conn.rollback()
 
 
-def load_process(func_to_extract_data: "function", func_to_transform_data: "function") -> None:
-    all_data = func_to_extract_data()
-    transformed_data = func_to_transform_data(all_data)
-
+def load_process(transformed_data: list[dict]) -> None:
     conn = get_connection(DB_HOST, DB_NAME, DB_USERNAME, DB_PASSWORD, DB_PORT)
     if conn:
         cur = get_cursor(conn)
@@ -212,10 +208,8 @@ def load_process(func_to_extract_data: "function", func_to_transform_data: "func
             all_statuses = get_all_statuses(cur)
             all_magtypes = get_all_magtypes(cur)
             all_types = get_all_types(cur)
-
             add_earthquake_data_to_rds(
                 conn, cur, transformed_data, all_alerts, all_statuses, all_networks, all_magtypes, all_types)
-
     cur.close()
     conn.close()
 
@@ -223,4 +217,6 @@ def load_process(func_to_extract_data: "function", func_to_transform_data: "func
 if __name__ == "__main__":
     from extract import extract_process
     from transform import transform_process
-    load_process(extract_process, transform_process)
+    all_data = extract_process()
+    transform_data = transform_process(all_data)
+    load_process(transform_data)
