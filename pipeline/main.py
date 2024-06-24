@@ -14,22 +14,28 @@ def run_pipeline():
     
     logging.info('Starting pipeline')
 
+
     try:
         extracted_data = extract_process()
     except Exception as e:
         logging.error(f'Error during extraction: {e}')
+        return
 
     try:
         transformed_data = transform_process(extracted_data)
     except Exception as e:
         logging.error(f'Error during transform: {e}')
+        return
 
     try:
         load_process(transformed_data)
         logging.info('Pipeline completed running')
+        return
     except Exception as e:
         logging.error(f'Error during load: {e}')
+        return
 
 
 if __name__ == "__main__":
     run_pipeline()
+
