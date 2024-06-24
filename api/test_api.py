@@ -1,7 +1,7 @@
 # pylint: skip-file
 from dotenv import load_dotenv
 import pytest
-from api import app, status_FILTER_KEY, network_FILTER_KEY, alert_FILTER_KEY, mag_type_FILTER_KEY, event_FILTER_KEY, min_magnitude_FILTER_KEY, continent_FILTER_KEY, get_filter_queries
+from api import app, STATUS_FILTER_KEY, NETWORK_FILTER_KEY, ALERT_FILTER_KEY, MAG_TYPE_FILTER_KEY, EVENT_FILTER_KEY, MIN_MAGNITUDE_FILTER_KEY, CONTINENT_FILTER_KEY, get_filter_queries
 
 from unittest.mock import patch
 
@@ -99,13 +99,13 @@ def test_endpoint_get_earthquakes(mock_all_earthquakes, client):
 
 def test_get_filter_queries():
     test_filter_dict = {
-        status_FILTER_KEY: "status",
-        network_FILTER_KEY: "net",
-        alert_FILTER_KEY: "alert",
-        mag_type_FILTER_KEY: "magtype",
-        event_FILTER_KEY: "type",
-        min_magnitude_FILTER_KEY: "min mag",
-        continent_FILTER_KEY: "continent"
+        STATUS_FILTER_KEY: "status",
+        NETWORK_FILTER_KEY: "net",
+        ALERT_FILTER_KEY: "alert",
+        MAG_TYPE_FILTER_KEY: "magtype",
+        EVENT_FILTER_KEY: "type",
+        MIN_MAGNITUDE_FILTER_KEY: "min mag",
+        CONTINENT_FILTER_KEY: "continent"
     }
 
     assert get_filter_queries(test_filter_dict) == [
@@ -121,13 +121,13 @@ def test_get_filter_queries():
 
 def test_get_filter_queries_alert_is_first_filter():
     test_filter_dict = {
-        status_FILTER_KEY: None,
-        network_FILTER_KEY: None,
-        alert_FILTER_KEY: "alert",
-        mag_type_FILTER_KEY: "magtype",
-        event_FILTER_KEY: "type",
-        min_magnitude_FILTER_KEY: "min mag",
-        continent_FILTER_KEY: "continent"
+        STATUS_FILTER_KEY: None,
+        NETWORK_FILTER_KEY: None,
+        ALERT_FILTER_KEY: "alert",
+        MAG_TYPE_FILTER_KEY: "magtype",
+        EVENT_FILTER_KEY: "type",
+        MIN_MAGNITUDE_FILTER_KEY: "min mag",
+        CONTINENT_FILTER_KEY: "continent"
     }
 
     assert get_filter_queries(test_filter_dict) == [

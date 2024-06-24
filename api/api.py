@@ -10,13 +10,13 @@ from psycopg2.extensions import connection, cursor
 
 app = Flask(__name__)
 
-status_FILTER_KEY = "status_filter"
-network_FILTER_KEY = "network_filter"
-alert_FILTER_KEY = "alert_filter"
-mag_type_FILTER_KEY = "mag_type_filter"
-event_FILTER_KEY = "event_filter"
-min_magnitude_FILTER_KEY = "min_magnitude_filter"
-continent_FILTER_KEY = "continent_filter"
+STATUS_FILTER_KEY = "status_filter"
+NETWORK_FILTER_KEY = "network_filter"
+ALERT_FILTER_KEY = "alert_filter"
+MAG_TYPE_FILTER_KEY = "mag_type_filter"
+EVENT_FILTER_KEY = "event_filter"
+MIN_MAGNITUDE_FILTER_KEY = "min_magnitude_filter"
+CONTINENT_FILTER_KEY = "continent_filter"
 
 
 def get_connection() -> connection:
@@ -39,13 +39,13 @@ def get_filter_queries(earthquake_filters: dict[str]) -> list[str]:
     """Return a list of WHERE command strings that can be added onto a postgreSQL query.
     """
     res = []
-    status = earthquake_filters[status_FILTER_KEY]
-    network = earthquake_filters[network_FILTER_KEY]
-    alert = earthquake_filters[alert_FILTER_KEY]
-    magtype = earthquake_filters[mag_type_FILTER_KEY]
-    event = earthquake_filters[event_FILTER_KEY]
-    min_magnitude = earthquake_filters[min_magnitude_FILTER_KEY]
-    continent = earthquake_filters[continent_FILTER_KEY]
+    status = earthquake_filters[STATUS_FILTER_KEY]
+    network = earthquake_filters[NETWORK_FILTER_KEY]
+    alert = earthquake_filters[ALERT_FILTER_KEY]
+    magtype = earthquake_filters[MAG_TYPE_FILTER_KEY]
+    event = earthquake_filters[EVENT_FILTER_KEY]
+    min_magnitude = earthquake_filters[MIN_MAGNITUDE_FILTER_KEY]
+    continent = earthquake_filters[CONTINENT_FILTER_KEY]
     if status is not None:
         res.append(f"s.status = '{status}'")
     if network is not None:
@@ -59,6 +59,7 @@ def get_filter_queries(earthquake_filters: dict[str]) -> list[str]:
     if min_magnitude is not None:
         res.append(f"e.magnitude >= '{min_magnitude}'")
     if continent is not None:
+        # TODO: implement api to get continent filter working
         res.append("NOT YET IMPLEMENTED")
     res[0] = "WHERE "+res[0]
     return res
@@ -82,7 +83,7 @@ def get_all_earthquakes(earthquake_filters: dict[str]) -> list[dict]:
         search_query += " AND ".join(query_filter_commands)
 
     with get_cursor(conn) as cur:
-        cur.execute(f"{search_query};")
+        cur.execute(search_query)
         fetched_earthquakes = cur.fetchall()
     conn.close()
     return fetched_earthquakes
@@ -99,13 +100,13 @@ def get_earthquakes() -> Response:
     """This endpoint returns a list containing data on every earthquake in our system."""
     try:
         user_filters = {
-            status_FILTER_KEY: request.args.get("status"),
-            network_FILTER_KEY: request.args.get("network"),
-            alert_FILTER_KEY: request.args.get("alert"),
-            mag_type_FILTER_KEY: request.args.get("mag_type"),
-            event_FILTER_KEY: request.args.get("event"),
-            min_magnitude_FILTER_KEY: request.args.get("min_magnitude"),
-            continent_FILTER_KEY: request.args.get("continent")
+            STATUS_FILTER_KEY: request.args.get("status"),
+            NETWORK_FILTER_KEY: request.args.get("network"),
+            ALERT_FILTER_KEY: request.args.get("alert"),
+            MAG_TYPE_FILTER_KEY: request.args.get("mag_type"),
+            EVENT_FILTER_KEY: request.args.get("event"),
+            MIN_MAGNITUDE_FILTER_KEY: request.args.get("min_magnitude"),
+            CONTINENT_FILTER_KEY: request.args.get("continent")
         }
 
         earthquakes = get_all_earthquakes(user_filters)
