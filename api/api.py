@@ -10,6 +10,14 @@ from psycopg2.extensions import connection, cursor
 
 app = Flask(__name__)
 
+status_FILTER_KEY = "status_filter"
+network_FILTER_KEY = "network_filter"
+alert_FILTER_KEY = "alert_filter"
+mag_type_FILTER_KEY = "mag_type_filter"
+event_FILTER_KEY = "event_filter"
+min_magnitude_FILTER_KEY = "min_magnitude_filter"
+continent_FILTER_KEY = "continent_filter"
+
 
 def get_connection() -> connection:
     """Return a connection object associated with the earthquake database"""
@@ -27,7 +35,36 @@ def get_cursor(conn: connection) -> cursor:
     return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
 
-def get_all_earthquakes(status_filter: str) -> list[dict]:
+def get_filter_queries(earthquake_filters: dict[str]) -> list[str]:
+    """Return a list of WHERE command strings that can be added onto a postgreSQL query.
+    """
+    res = []
+    status = earthquake_filters[status_FILTER_KEY]
+    network = earthquake_filters[network_FILTER_KEY]
+    alert = earthquake_filters[alert_FILTER_KEY]
+    magtype = earthquake_filters[mag_type_FILTER_KEY]
+    event = earthquake_filters[event_FILTER_KEY]
+    min_magnitude = earthquake_filters[min_magnitude_FILTER_KEY]
+    continent = earthquake_filters[continent_FILTER_KEY]
+    if status is not None:
+        res.append(f"WHERE s.status = '{status}'")
+    if network is not None:
+        res.append(f"WHERE n.network_name = '{network}'")
+    if alert is not None:
+        res.append(f"WHERE a.alert_value = '{alert}'")
+    if magtype is not None:
+        res.append(f"WHERE mt.magtype_value = '{magtype}'")
+    if event is not None:
+        res.append(f"WHERE t.type_value = '{event}'")
+    if min_magnitude is not None:
+        res.append(f"WHERE e.magnitude >= '{min_magnitude}'")
+    if continent is not None:
+        res.append("NOT YET IMPLEMENTED")
+
+    return res
+
+
+def get_all_earthquakes(earthquake_filters: dict[str]) -> list[dict]:
     """Return a list of all earthquake data from the database."""
     conn = get_connection()
 
@@ -40,8 +77,10 @@ def get_all_earthquakes(status_filter: str) -> list[dict]:
     LEFT JOIN networks AS n USING(network_id)
     LEFT JOIN alerts AS a USING(alert_id)
     """
+    if any(value is not None for value in earthquake_filters.values()):
+        query_filter_commands = get_filter_queries(earthquake_filters)
+        search_query += " AND ".join(query_filter_commands)
 
-    search_query += f"""WHERE s.status = '{status_filter}'"""
     with get_cursor(conn) as cur:
         cur.execute(f"{search_query};")
         fetched_earthquakes = cur.fetchall()
@@ -59,8 +98,17 @@ def endpoint_index() -> Response:
 def get_earthquakes() -> Response:
     """This endpoint returns a list containing data on every earthquake in our system."""
     try:
-        status_filter = request.args.get("status")
-        earthquakes = get_all_earthquakes(status_filter)
+        user_filters = {
+            status_FILTER_KEY: request.args.get("status"),
+            network_FILTER_KEY: request.args.get("network"),
+            alert_FILTER_KEY: request.args.get("alert"),
+            mag_type_FILTER_KEY: request.args.get("mag_type"),
+            event_FILTER_KEY: request.args.get("event"),
+            min_magnitude_FILTER_KEY: request.args.get("min_magnitude"),
+            continent_FILTER_KEY: request.args.get("continent")
+        }
+
+        earthquakes = get_all_earthquakes(user_filters)
         return earthquakes, 200
     except Exception as e:  # pylint: disable=broad-exception-caught
         return {"error": str(e)}, 400
