@@ -3,7 +3,7 @@
 import traceback
 from os import environ as ENV
 from dotenv import load_dotenv
-import main
+from main import run_pipeline
 
 
 def handler(event=None, context=None) -> dict:  # pylint: disable=unused-argument
@@ -11,9 +11,7 @@ def handler(event=None, context=None) -> dict:  # pylint: disable=unused-argumen
     Handler function required for lambda
     """
     try:
-        load_dotenv()
-        num_plants = int(ENV["NUM_PLANTS"])
-        main.run_pipeline(num_plants)
+        run_pipeline()
 
         return {
             'status': 'Pipeline ran successfully'
