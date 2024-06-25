@@ -1,7 +1,7 @@
 # pylint: skip-file
 from dotenv import load_dotenv
 import pytest
-from api import app, STATUS_FILTER_KEY, NETWORK_FILTER_KEY, ALERT_FILTER_KEY, MAG_TYPE_FILTER_KEY, EVENT_FILTER_KEY, MIN_MAGNITUDE_FILTER_KEY, CONTINENT_FILTER_KEY, get_filter_queries
+from api import app, STATUS_FILTER_KEY, NETWORK_FILTER_KEY, ALERT_FILTER_KEY, MAG_TYPE_FILTER_KEY, EVENT_FILTER_KEY, MIN_MAGNITUDE_FILTER_KEY, CONTINENT_FILTER_KEY, get_filter_queries, filter_by_continent
 
 from unittest.mock import patch
 
@@ -114,8 +114,7 @@ def test_get_filter_queries():
         "a.alert_value = 'alert'",
         "mt.magtype_value = 'magtype'",
         "t.type_value = 'type'",
-        "e.magnitude >= 'min mag'",
-        "NOT YET IMPLEMENTED"
+        "e.magnitude >= 'min mag'"
     ]
 
 
@@ -134,6 +133,11 @@ def test_get_filter_queries_alert_is_first_filter():
         "WHERE a.alert_value = 'alert'",
         "mt.magtype_value = 'magtype'",
         "t.type_value = 'type'",
-        "e.magnitude >= 'min mag'",
-        "NOT YET IMPLEMENTED"
+        "e.magnitude >= 'min mag'"
     ]
+
+
+def test_filter_by_continent(example_api_response):
+    assert filter_by_continent(example_api_response, "Africa") == []
+    assert filter_by_continent(
+        example_api_response, "North America") == example_api_response

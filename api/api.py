@@ -59,13 +59,14 @@ def get_filter_queries(earthquake_filters: dict[str]) -> list[str]:
         res.append(f"t.type_value = '{event}'")
     if min_magnitude is not None:
         res.append(f"e.magnitude >= '{min_magnitude}'")
-    if res != []:
+    if res:
         res[0] = "WHERE "+res[0]
     return res
 
 
 def filter_by_continent(fetched_data, continent: str) -> list[dict]:
-    """filter through the data extracted so far, and only keep data that matches the continent being filtered."""
+    """filter through the data extracted so far, and only keep data
+    that matches the continent being filtered."""
     continent_dict = {
         "North America": "NA",
         "South America": "SA",
@@ -91,9 +92,8 @@ def filter_by_continent(fetched_data, continent: str) -> list[dict]:
                 res.append(row)
                 print("row added!")
             print("run complete!")
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             print(str(e))
-            pass
     return res
 
 
