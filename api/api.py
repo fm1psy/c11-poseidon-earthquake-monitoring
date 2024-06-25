@@ -20,6 +20,18 @@ MAG_TYPE_FILTER_KEY = "mag_type_filter"
 EVENT_FILTER_KEY = "event_filter"
 MIN_MAGNITUDE_FILTER_KEY = "min_magnitude_filter"
 CONTINENT_FILTER_KEY = "continent_filter"
+COUNTRY_FILTER_KEY = "country_filter"
+CONTINENTS = ["North America", "South America", "Asia",
+              "Africa", "Oceania", "Europe", "Antarctica"]
+CONTINENTS_TO_CODE = {
+    "North America": "NA",
+    "South America": "SA",
+    "Asia": "AS",
+    "Africa": "AF",
+    "Oceania": "OC",
+    "Europe": "EU",
+    "Antarctica": "AQ"
+}
 
 
 def get_connection() -> connection:
@@ -65,23 +77,20 @@ def get_filter_queries(earthquake_filters: dict[str]) -> list[str]:
     return res
 
 
+def is_continent_valid(continent: str) -> bool:
+    """return whethere a given continent is accepted or not."""
+    if continent not in CONTINENTS:
+        return False
+    return True
+
+
 def filter_by_continent(fetched_data, continent: str) -> list[dict]:
     """filter through the data extracted so far, and only keep data
     that matches the continent being filtered."""
-    continent_dict = {
-        "North America": "NA",
-        "South America": "SA",
-        "Asia": "AS",
-        "Africa": "AF",
-        "Oceania": "OC",
-        "Europe": "EU",
-        "Antarctica": "AQ"
-
-    }
     res = []
-    if continent_dict.get(continent.title(), None) is None:
+    if not is_continent_valid(continent):
         return fetched_data
-    continent_filter_code = continent_dict[continent.title()]
+    continent_filter_code = CONTINENTS_TO_CODE[continent.title()]
     for row in fetched_data:
         try:
             location = rg.get((row["lat"], row["lon"]))
@@ -90,6 +99,21 @@ def filter_by_continent(fetched_data, continent: str) -> list[dict]:
             # get continent code from country code
             continent_code = pc.country_alpha2_to_continent_code(country_code)
             if continent_code == continent_filter_code:
+                res.append(row)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logging.error(e)
+    return res
+
+
+def filter_by_country(fetched_data, country: str) -> list[dict]:
+    """filter through the data fetched and return a list of events whose
+    coordinates match the chosen country"""
+    res = []
+
+    for row in fetched_data:
+        try:
+            location = rg.get((row["lat"], row["lon"]))
+            if location["country"] == country.title():
                 res.append(row)
         except Exception as e:  # pylint: disable=broad-exception-caught
             logging.error(e)
@@ -118,9 +142,13 @@ def get_all_earthquakes(earthquake_filters: dict[str]) -> list[dict]:
         fetched_earthquakes = cur.fetchall()
     conn.close()
     continent = earthquake_filters[CONTINENT_FILTER_KEY]
+    country = earthquake_filters[COUNTRY_FILTER_KEY]
     if continent is not None:
         fetched_earthquakes = filter_by_continent(
             fetched_earthquakes, earthquake_filters[CONTINENT_FILTER_KEY])
+    if country is not None:
+        fetched_earthquakes = filter_by_country(
+            fetched_earthquakes, earthquake_filters[COUNTRY_FILTER_KEY])
     return fetched_earthquakes
 
 
@@ -141,7 +169,8 @@ def get_earthquakes() -> Response:
             MAG_TYPE_FILTER_KEY: request.args.get("mag_type"),
             EVENT_FILTER_KEY: request.args.get("event"),
             MIN_MAGNITUDE_FILTER_KEY: request.args.get("min_magnitude"),
-            CONTINENT_FILTER_KEY: request.args.get("continent")
+            CONTINENT_FILTER_KEY: request.args.get("continent"),
+            COUNTRY_FILTER_KEY: request.args.get("country")
         }
 
         earthquakes = get_all_earthquakes(user_filters)
