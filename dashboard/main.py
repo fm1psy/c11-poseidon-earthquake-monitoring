@@ -138,8 +138,8 @@ def create_risk_state_map(state_grouping: gpd.GeoDataFrame,
         lookup='id',
         from_=alt.LookupData(state_grouping, 'id', ['risk_score'])
     ).properties(
-        width=500,
-        height=300
+        width=1000,
+        height=600
     ).project('albersUsa')
 
     return base + chart
@@ -169,17 +169,56 @@ def get_state_risk_map() -> alt.Chart:
     return risk_map
 
 
+def get_most_recent_earthquake_above_mag_5(conn):
+    with conn.cursor() as cur:
+        cur.execute(
+            """select title, time, magnitude from earthquakes where magnitude >= 5 order by time DESC limit 1; """)
+        result = cur.fetchone()
+    return result
+
+
+def get_avg_magnitude_last_7_days(conn):
+    with conn.cursor() as cur:
+        cur.execute("""
+        SELECT AVG(magnitude) depth FROM earthquakes
+        WHERE time >= %s; """, (WEEK_CONSTRAINT,))
+        result = cur.fetchone()
+    return result
+
+
+def get_avg_magnitude_last_30_days(conn):
+    with conn.cursor() as cur:
+        cur.execute("""
+        SELECT AVG(magnitude) depth FROM earthquakes
+        WHERE time >= %s; """, (MONTH_CONSTRAINT,))
+        result = cur.fetchone()
+    return result
+
+
 if __name__ == "__main__":
-    st.title("Earthquakes!!!")
+    st.set_page_config(layout="wide")
+    st.title("Earthquake Dashboard")
+
     load_dotenv()
     conn = get_connection()
+    recent_earthquake_loc, recent_earthquake_time, recent_earthquake_mag = get_most_recent_earthquake_above_mag_5(
+        conn)
+    st.subheader(
+        f"The most recent significant earthquake was recorded in {recent_earthquake_loc} at {recent_earthquake_time} with a magnitude of {recent_earthquake_mag}.")
 
-    timeframe = st.radio("Select timeframe:", ["Last 7 days", 'Last 30 days'])
+    timeframe = st.radio("Select timeframe:", [
+        "Last 7 days", 'Last 30 days'])
     if timeframe == 'Last 7 days':
         chosen_data = get_magnitude_map_data_last_7_days(conn)
+        avg_magnitude = get_avg_magnitude_last_7_days(conn)
     elif timeframe == 'Last 30 days':
         chosen_data = get_magnitude_map_data_last_30_days(conn)
+        avg_magnitude = get_avg_magnitude_last_30_days(conn)
+    st.write(f"""The average magnitude of all earthquakes in the {
+        timeframe} is {avg_magnitude}""")
     st.altair_chart(create_magnitude_map(pd.DataFrame(chosen_data, columns=[
         'lon', 'lat', 'magnitude', 'depth'])))
 
+    st.subheader(
+        "The map below shows the states of the US colour coded by the risk posed by earthquakes:")
     st.altair_chart(get_state_risk_map())
