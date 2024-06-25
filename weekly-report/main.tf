@@ -5,14 +5,7 @@ provider "aws" {
   
 }
 
-# 1 S3 Bucket to store weekly PDF reports
-resource "aws_s3_bucket" "report_storage" {
-    bucket = "poseidon-weekly-reports-storage"
-    force_destroy = true
-  
-}
-
-# 2 Eventbridge Scheduler to target report generator every friday at 9am
+# 1 Eventbridge Scheduler to target report generator every friday at 9am
 resource "aws_scheduler_schedule" "reporting_scheduler" {
   name       = "poseidon-earthquake-weekly-reporting-scheduler"
   description = "schedules the weekly PDF report generator to run daily at 9am"
@@ -65,7 +58,7 @@ resource "aws_iam_role_policy_attachment" "scheduler_reporting_lambda_invoke_pol
   policy_arn = aws_iam_policy.scheduler_execute_reporting_policy.arn
 }
 
-#3 Lamdba Function that generates weekly report
+#2 Lamdba Function that generates weekly report
 # ------- Function ----------
 resource "aws_lambda_function" "reporting_lambda" {
     function_name = "poseidon-weekly-reporting"
@@ -110,7 +103,7 @@ resource "aws_iam_policy" "reporting_s3_access_policy" {
       {
         Effect = "Allow",
         Action = ["s3:GetObject","s3:PutObject","s3:ListBucket"],
-        Resource = format("%s/*",aws_s3_bucket.report_storage.arn)
+        Resource = "" # TO FILL
       }
     ]
   })
