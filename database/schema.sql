@@ -4,6 +4,9 @@ DROP TABLE IF EXISTS statuses CASCADE;
 DROP TABLE IF EXISTS magtypes CASCADE;
 DROP TABLE IF EXISTS networks CASCADE;
 DROP TABLE IF EXISTS types CASCADE;
+DROP TABLE IF EXISTS user_topic_assignments CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS topics CASCADE;
 
 CREATE TABLE alerts (
     alert_id SMALLINT GENERATED ALWAYS AS IDENTITY,
@@ -60,6 +63,33 @@ CREATE TABLE earthquakes (
     FOREIGN KEY (network_id) REFERENCES networks(network_id),
     FOREIGN KEY (type_id) REFERENCES types(type_id),
     FOREIGN KEY (magtype_id) REFERENCES magtypes(magtype_id)
+);
+
+CREATE TABLE users (
+    user_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    email_address VARCHAR(100) UNIQUE NOT NULL,
+    phone_number VARCHAR(25) UNIQUE NOT NULL,
+    PRIMARY KEY (user_id)
+);
+
+CREATE TABLE topics (
+    topic_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    topic_arn VARCHAR(100) UNIQUE NOT NULL,
+    min_magnitude REAL NOT NULL,
+    lon DECIMAL(9, 6) NOT NULL,
+    lat DECIMAL(8, 6) NOT NULL,
+    PRIMARY KEY (topic_id)
+);
+
+CREATE TABLE user_topic_assignments (
+    assignment_id SMALLINT GENERATED ALWAYS AS IDENTITY,
+    user_id SMALLINT NOT NULL,
+    topic_id SMALLINT NOT NULL,
+    sms_subscription_arn VARCHAR(150) NOT NULL,
+    email_subscription_arn VARCHAR(150) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (topic_id) REFERENCES topics(topic_id),
+    PRIMARY KEY (assignment_id)
 );
 
 INSERT INTO alerts (alert_value) VALUES 
