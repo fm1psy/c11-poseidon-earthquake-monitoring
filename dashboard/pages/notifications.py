@@ -110,7 +110,7 @@ def create_subscription_form():
             ('0 - All earthquakes', '1 - rlly small', '2 - micro', '3 - minor',
              '4 - light', '5 - moderate', '6 - strong', '7 - major', '8 - great')
         )
-        map = st_folium(m)
+        map = st_folium(m, width=1000, height=500)
 
         if map.get("last_clicked"):
             selected_lat = map["last_clicked"]["lat"]
@@ -126,8 +126,44 @@ def create_subscription_form():
     return []
 
 
+def unsubscribe_user_from_topic():
+    ...
+
+
+def remove_user_from_database():
+    ...
+
+
+def remove_user_topic_assignment_from_database():
+    ...
+
+
+def create_unsubscribe_form():
+    email = ""
+    phone_number = ""
+    with st.form("notification-unsubscribe", clear_on_submit=True, border=True):
+        st.header("Unsubscribe from earthquake notifications")
+        st.write("If you have previously subscribed to receiving earthquake notifications and wish to unsubscribe, please enter the email and phone number used when subscribing below:")
+        email = st.text_input("Email:")
+        phone_number = st.text_input("Phone Number:")
+
+        submit = st.form_submit_button()
+    if submit and email and phone_number:
+        conn = get_connection()
+        user = check_if_user_exists(
+            conn, {'email': email, 'phone_number': phone_number})
+        if user is None:
+            st.error(f'''User with email {email} and phone number {
+                     phone_number} does not exist''')
+        else:
+            unsubscribe_user_from_topic()
+            remove_user_from_database()
+            remove_user_topic_assignment_from_database()
+
+
 if __name__ == "__main__":
     user_info = create_subscription_form()
+    create_unsubscribe_form()
     if user_info != []:
         client = get_sns_client()
         conn = get_connection()
