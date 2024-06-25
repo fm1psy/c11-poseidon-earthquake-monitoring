@@ -1,6 +1,7 @@
 """This API is to be of use for those who wish to retrieve useful information from our database of
 earthquake data. Whether it be an amateur developer or a seasoned researcher, this service should
 be easy to make the most out of through its endpoints."""
+import logging
 from os import environ as env
 from dotenv import load_dotenv
 from flask import Flask, Response, request
@@ -90,10 +91,8 @@ def filter_by_continent(fetched_data, continent: str) -> list[dict]:
             continent_code = pc.country_alpha2_to_continent_code(country_code)
             if continent_code == continent_filter_code:
                 res.append(row)
-                print("row added!")
-            print("run complete!")
         except Exception as e:  # pylint: disable=broad-exception-caught
-            print(str(e))
+            logging.error(e)
     return res
 
 
@@ -153,4 +152,5 @@ def get_earthquakes() -> Response:
 
 if __name__ == "__main__":
     load_dotenv()
+    logging.basicConfig(encoding='utf-8', level=logging.ERROR)
     app.run(debug=True, host="0.0.0.0", port=5000)
