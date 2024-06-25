@@ -7,6 +7,8 @@ from flask import Flask, Response, request
 import psycopg2
 import psycopg2.extras
 from psycopg2.extensions import connection, cursor
+import reverse_geocode as rg
+import pycountry_convert as pc
 
 app = Flask(__name__)
 
@@ -57,17 +59,42 @@ def get_filter_queries(earthquake_filters: dict[str]) -> list[str]:
         res.append(f"t.type_value = '{event}'")
     if min_magnitude is not None:
         res.append(f"e.magnitude >= '{min_magnitude}'")
-    res[0] = "WHERE "+res[0]
+    if res != []:
+        res[0] = "WHERE "+res[0]
     return res
 
 
-def filter_by_continent(fetched_data) -> list[dict]:
-    """"""
-    for row in fetched_data:
-        row["lat"] = 0
-        row["lon"] = 0
+def filter_by_continent(fetched_data, continent: str) -> list[dict]:
+    """filter through the data extracted so far, and only keep data that matches the continent being filtered."""
+    continent_dict = {
+        "North America": "NA",
+        "South America": "SA",
+        "Asia": "AS",
+        "Africa": "AF",
+        "Oceania": "OC",
+        "Europe": "EU",
+        "Antarctica": "AQ"
 
-    return fetched_data
+    }
+    res = []
+    if continent_dict.get(continent.title(), None) is None:
+        return fetched_data
+    continent_filter_code = continent_dict[continent.title()]
+    for row in fetched_data:
+        try:
+            location = rg.get((row["lat"], row["lon"]))
+            # extract country code
+            country_code = location["country_code"]
+            # get continent code from country code
+            continent_code = pc.country_alpha2_to_continent_code(country_code)
+            if continent_code == continent_filter_code:
+                res.append(row)
+                print("row added!")
+            print("run complete!")
+        except Exception as e:
+            print(str(e))
+            pass
+    return res
 
 
 def get_all_earthquakes(earthquake_filters: dict[str]) -> list[dict]:
@@ -91,8 +118,10 @@ def get_all_earthquakes(earthquake_filters: dict[str]) -> list[dict]:
         cur.execute(search_query)
         fetched_earthquakes = cur.fetchall()
     conn.close()
-    if earthquake_filters[CONTINENT_FILTER_KEY] is not None:
-        fetched_earthquakes = filter_by_continent(fetched_earthquakes)
+    continent = earthquake_filters[CONTINENT_FILTER_KEY]
+    if continent is not None:
+        fetched_earthquakes = filter_by_continent(
+            fetched_earthquakes, earthquake_filters[CONTINENT_FILTER_KEY])
     return fetched_earthquakes
 
 
