@@ -1,22 +1,30 @@
 import streamlit as st
-from charts import get_world_map_background
+from charts import create_magnitude_map
 import altair as alt
+from vega_datasets import data
+from psycopg2.extensions import connection, cursor
+import psycopg2.extras
+import pandas as pd
+from os import environ
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
+
+
+WEEK_CONSTRAINT = datetime.now() - timedelta(days=7)
+MONTH_CONSTRAINT = datetime.now() - timedelta(days=30)
 
 
 def get_connection():
-    ...
+    """gets connection to the database"""
+    return psycopg2.connect(host=environ['DB_HOST'],
+                            dbname=environ['DB_NAME'],
+                            user=environ['DB_USERNAME'],
+                            password=environ['DB_PASSWORD'],
+                            port=environ['DB_PORT'])
 
 
-def get_last_7_days_data():
-    ...
-
-
-def get_last_30_days_data():
-    ...
-
-
-def get_magnitude_map_data(conn: connection) -> list[tuple]:
-    """get this week's earthquake data from db"""
+def get_magnitude_map_data_last_7_days(conn: connection) -> list[tuple]:
+    """get last 7 days earthquake data from db"""
     with conn.cursor() as cur:
         cur.execute("""
         SELECT lon,lat,magnitude,depth FROM earthquakes
@@ -26,32 +34,26 @@ def get_magnitude_map_data(conn: connection) -> list[tuple]:
     return result
 
 
-def create_magnitude_map(weekly_data: pd.DataFrame) -> alt.Chart:
-    """creates world map chart of current week earthquakes"""
-    weekly_data['lon'] = weekly_data['lon'].astype(float)
-    weekly_data['lat'] = weekly_data['lat'].astype(float)
-    countries = alt.topo_feature(data.world_110m.url, 'countries')
-    background = alt.Chart(countries).mark_geoshape(
-        fill='lightgray',
-        stroke='black',
-    ).project(
-        "equirectangular"
-    ).properties(
-        width=1000,
-        height=600
-    )
+def get_magnitude_map_data_last_30_days(conn: connection) -> list[tuple]:
+    """get last 30 days earthquake data from db"""
+    with conn.cursor() as cur:
+        cur.execute("""
+        SELECT lon,lat,magnitude,depth FROM earthquakes
+        WHERE time >= %s; """, (MONTH_CONSTRAINT,))
+        result = cur.fetchall()
 
-    points = alt.Chart(weekly_data).mark_circle().encode(
-        longitude='lon',
-        latitude='lat',
-        size=alt.Size('magnitude:Q', scale=alt.Scale(range=[10, 150])),
-        color=alt.Color('depth:Q', scale=alt.Scale(scheme='reds', domain=[
-                        weekly_data['depth'].min(), weekly_data['depth'].max()], range=['green', 'red'])),
-        tooltip=['magnitude:Q', 'depth:Q']
-    )
-
-    return background + points
+    return result
 
 
 if __name__ == "__main__":
     st.title("Earthquakes!!!")
+    load_dotenv()
+    conn = get_connection()
+
+    timeframe = st.radio("Select timeframe:", ["Last 7 days", 'Last 30 days'])
+    if timeframe == 'Last 7 days':
+        chosen_data = get_magnitude_map_data_last_7_days(conn)
+    elif timeframe == 'Last 30 days':
+        chosen_data = get_magnitude_map_data_last_30_days(conn)
+    st.altair_chart(create_magnitude_map(pd.DataFrame(chosen_data, columns=[
+        'lon', 'lat', 'magnitude', 'depth'])))
