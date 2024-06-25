@@ -4,32 +4,31 @@ from os import environ as ENV
 from haversine import haversine
 import logging
 from psycopg2.extensions import connection, cursor
-from psycopg2 import OperationalError
 import psycopg2.extras
-import os
+
 
 load_dotenv()
 
 def get_sns_client():
-    return boto3.client('sns',
-                        aws_access_key_id=ENV.get("ACCESS_KEY"),
-                        aws_secret_access_key=ENV.get("SECRET_ACCESS_KEY"))
+    try:
+        return boto3.client('sns',
+                            aws_access_key_id=ENV.get("ACCESS_KEY"),
+                            aws_secret_access_key=ENV.get("SECRET_ACCESS_KEY"))
 
+    except Exception as e:
+        logging.error(
+            f"An unexpected error occurred in establishing sns client: {e}")
+        return None
+    
 
 def get_connection() -> connection:
     """Creates a psycopg2 connection"""
     try:
-        conn = psycopg2.connect(host=ENV.get('DB_HOST'),
+        return psycopg2.connect(host=ENV.get('DB_HOST'),
                                 database=ENV.get('DB_NAME'),
                                 user=ENV.get('DB_USERNAME'),
                                 password=ENV.get('DB_PASSWORD'),
                                 port=ENV.get('DB_PORT'))
-        logging.info("Connection established successfully")
-        return conn
-    except OperationalError as e:
-        logging.error(
-            f"OperationalError occurred while trying to connect to the database: {e}")
-        return None
     except Exception as e:
         logging.error(
             f"An unexpected error occurred in establishing connection: {e}")
@@ -40,13 +39,7 @@ def get_cursor(conn: connection) -> cursor:
     """Creates a cursor based on provided psycopg2 connection"""
     logging.info("Creating a cursor from the psycopg2 connection")
     try:
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        logging.info("Cursor created successfully")
-        return cursor
-    except OperationalError as e:
-        logging.error(
-            f"OperationalError occurred while trying to create a cursor: {e}")
-        return None
+        return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     except Exception as e:
         logging.error(
             f"An unexpected error occurred in creating a cursor: {e}")
@@ -81,16 +74,15 @@ def get_topic_detail(topic, detail):
     return topic[detail]
     
 
-def check_topics_in_range(eq_lon, eq_lat, topics):
-    related_topics = []
-    for topic in topics:
-        topic_lat = get_topic_detail(topic, 'lat')
-        topic_lon = get_topic_detail(topic, 'lon')
-        topic_coordinates = (topic_lat, topic_lon)
-        earthquake_coordinates = (eq_lat, eq_lon)
-        if calculate_distance(earthquake_coordinates, topic_coordinates) <= 50:
-            related_topics.append(get_topic_detail(topic, 'topic_id'))
-    return related_topics
+def check_topics_in_range(eq_lon, eq_lat, topic):
+    topic_lat = get_topic_detail(topic, 'lat')
+    topic_lon = get_topic_detail(topic, 'lon')
+    topic_coordinates = (topic_lat, topic_lon)
+    earthquake_coordinates = (eq_lat, eq_lon)
+    if calculate_distance(earthquake_coordinates, topic_coordinates) <= 50:
+        return True
+    return False
+
 
 
 def get_subscribed_users(conn, related_topics):
@@ -108,7 +100,7 @@ def get_subscribed_users(conn, related_topics):
             JOIN users AS u ON u.user_id = uta.user_id
             WHERE uta.topic_id = %s;
             """
-            cur.execute(query, (topic,))
+            cur.execute(query, (topic['topic_id'],))
             rows = cur.fetchall()
 
             for row in rows:
@@ -138,10 +130,23 @@ def subscribe(client, email):
     )
 
 
+def find_related_topics(transform_data, topics):
+    related_topics = []
+    for data in transform_data:
+        for topic in topics:
+            if data['mag'] >= topics['min_magnitude'] and check_topics_in_range(topic, eq_lon=data['lon'], eq_lat=data['lat']):
+                related_topics.append(topic)
+    return related_topics
+
+
 if __name__ == "__main__":
+    import extract
+    import transform
+    extract_data = extract.extract_process()
+    transform_data = transform.transform_process(extract_data)
+
     client = get_sns_client()
     conn = get_connection()
     topics = get_topics(conn)
-    print(topics)
-    related_topics = check_topics_in_range(topics, eq_lon=None, eq_lat=None)
+    related_topics = find_related_topics(transform_data, topics)
     subscribed_users = get_subscribed_users(conn, related_topics)
