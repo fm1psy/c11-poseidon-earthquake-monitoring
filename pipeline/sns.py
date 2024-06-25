@@ -6,7 +6,7 @@ import logging
 from psycopg2.extensions import connection, cursor
 from psycopg2 import OperationalError
 import psycopg2.extras
-
+import os
 
 load_dotenv()
 
@@ -19,11 +19,11 @@ def get_sns_client():
 def get_connection() -> connection:
     """Creates a psycopg2 connection"""
     try:
-        conn = psycopg2.connect(DB_HOST=ENV.get('DB_HOST')
-                                DB_NAME=ENV.get('DB_NAME')
-                                DB_USERNAME=ENV.get('DB_USERNAME')
-                                DB_PASSWORD=ENV.get('DB_PASSWORD')
-                                DB_PORT=ENV.get('DB_PORT'))
+        conn = psycopg2.connect(host=ENV.get('DB_HOST'),
+                                database=ENV.get('DB_NAME'),
+                                user=ENV.get('DB_USERNAME'),
+                                password=ENV.get('DB_PASSWORD'),
+                                port=ENV.get('DB_PORT'))
         logging.info("Connection established successfully")
         return conn
     except OperationalError as e:
@@ -67,36 +67,62 @@ def get_topics(conn):
     """
     Gets topics from database
     """
-    cur = get_cursor(conn)
+    with conn.cursor() as cur:
+        query = """SELECT * FROM topics;"""
+        cur.execute(query)
+        topic_coordinates = cur.fetchall()
+    return topic_coordinates
 
-    query = 
 
-
-def get_topic_details():
+def get_topic_detail(topic, detail):
     """
-    A function should be enough to fetch: topic_arn, longitude, latitude, min_magnitude
-    for other functions in the script to determine who to send alerts to
+    A function  to fetch: topic_arn, longitude, latitude, min_magnitude
     """
-    ...
+    return topic[detail]
+    
+
+def check_topics_in_range(eq_lon, eq_lat, topics):
+    related_topics = []
+    for topic in topics:
+        topic_lat = get_topic_detail(topic, 'lat')
+        topic_lon = get_topic_detail(topic, 'lon')
+        topic_coordinates = (topic_lat, topic_lon)
+        earthquake_coordinates = (eq_lat, eq_lon)
+        if calculate_distance(earthquake_coordinates, topic_coordinates) <= 50:
+            related_topics.append(get_topic_detail(topic, 'topic_id'))
+    return related_topics
 
 
-def get_subscribed_users():
+def get_subscribed_users(conn, related_topics):
     """
     Find a way to get all users who have subscribed to the mailing list for targeted
-    topics
+    topics.
     """
-    ...
+    interested_users = []
 
+    with conn.cursor() as cur:
+        for topic in related_topics:
+            query = """
+            SELECT uta.user_id, u.email_address, u.phone_number, u.sms_subscription_arn, u.email_subscription_arn
+            FROM user_topic_assignments AS uta
+            JOIN users AS u ON u.user_id = uta.user_id
+            WHERE uta.topic_id = %s;
+            """
+            cur.execute(query, (topic,))
+            rows = cur.fetchall()
 
-def send_message(client):
-    """
-    Creates the alert message. Still work in progress
-    """
-    client.publish(
-        TopicArn=TOPIC,
-        Message=" WASSUP",
-        Subject="if u get a text can u let me know",
-    )
+            for row in rows:
+                user = {
+                    'user_id': row[0],
+                    'email_address': row[1],
+                    'phone_number': row[2],
+                    'sms_subscription_arn': row[3],
+                    'email_subscription_arn': row[4]
+                }
+                if user not in interested_users:  # Avoid duplicates
+                    interested_users.append(user)
+
+    return interested_users
 
 
 def subscribe(client, email):
@@ -114,4 +140,8 @@ def subscribe(client, email):
 
 if __name__ == "__main__":
     client = get_sns_client()
-    conn = get_connection
+    conn = get_connection()
+    topics = get_topics(conn)
+    print(topics)
+    related_topics = check_topics_in_range(topics, eq_lon=None, eq_lat=None)
+    subscribed_users = get_subscribed_users(conn, related_topics)
