@@ -20,6 +20,7 @@ MAG_TYPE_FILTER_KEY = "mag_type_filter"
 EVENT_FILTER_KEY = "event_filter"
 MIN_MAGNITUDE_FILTER_KEY = "min_magnitude_filter"
 CONTINENT_FILTER_KEY = "continent_filter"
+COUNTRY_FILTER_KEY = ""
 
 
 def get_connection() -> connection:
@@ -118,7 +119,11 @@ def get_all_earthquakes(earthquake_filters: dict[str]) -> list[dict]:
         fetched_earthquakes = cur.fetchall()
     conn.close()
     continent = earthquake_filters[CONTINENT_FILTER_KEY]
+    country = earthquake_filters[CONTINENT_FILTER_KEY]
     if continent is not None:
+        fetched_earthquakes = filter_by_continent(
+            fetched_earthquakes, earthquake_filters[CONTINENT_FILTER_KEY])
+    if country is None:
         fetched_earthquakes = filter_by_continent(
             fetched_earthquakes, earthquake_filters[CONTINENT_FILTER_KEY])
     return fetched_earthquakes
@@ -141,7 +146,8 @@ def get_earthquakes() -> Response:
             MAG_TYPE_FILTER_KEY: request.args.get("mag_type"),
             EVENT_FILTER_KEY: request.args.get("event"),
             MIN_MAGNITUDE_FILTER_KEY: request.args.get("min_magnitude"),
-            CONTINENT_FILTER_KEY: request.args.get("continent")
+            CONTINENT_FILTER_KEY: request.args.get("continent"),
+            COUNTRY_FILTER_KEY: request.args.get("country")
         }
 
         earthquakes = get_all_earthquakes(user_filters)
