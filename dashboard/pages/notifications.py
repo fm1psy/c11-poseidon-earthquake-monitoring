@@ -89,11 +89,6 @@ def upload_user_subscription_to_database(conn, user_id, topic_id, email_subscrip
                        topic_id, email_subscription['SubscriptionArn'], sms_subscription['SubscriptionArn']))
 
 
-def unsubscribe_to_topic(client, conn, user_info):
-    if check_if_user_exists(conn, user_info):
-        response = client.unsubscribe()
-
-
 def create_subscription_form():
     email = ""
     phone_number = ""
@@ -126,8 +121,13 @@ def create_subscription_form():
     return []
 
 
-def unsubscribe_user_from_topic():
-    ...
+def unsubscribe_user_from_topic(client, email_subscription_arn, sms_subscription_arn):
+    client.unsubscribe(
+        SubscriptionArn=email_subscription_arn
+    )
+    client.unsubscribe(
+        SubscriptionArn=sms_subscription_arn
+    )
 
 
 def remove_user_from_database():
@@ -136,6 +136,15 @@ def remove_user_from_database():
 
 def remove_user_topic_assignment_from_database():
     ...
+
+
+def get_user_subscription_arn(conn, user_info):
+    with conn.cursor as cursor:
+        cursor.execute(f"""select uta.sms_subscription_arn, uta.email_subscription_arn from user_topic_assignments as uta
+                            join users as u on u.user_id = uta.user_id
+                            where u.email_address = {user_info['email_address']} and u.phone_number = {user_info['phone_number']}""")
+        result = cursor.fetchone()
+    return result
 
 
 def create_unsubscribe_form():
@@ -149,6 +158,7 @@ def create_unsubscribe_form():
 
         submit = st.form_submit_button()
     if submit and email and phone_number:
+        client = get_sns_client()
         conn = get_connection()
         user = check_if_user_exists(
             conn, {'email': email, 'phone_number': phone_number})
@@ -156,7 +166,10 @@ def create_unsubscribe_form():
             st.error(f'''User with email {email} and phone number {
                      phone_number} does not exist''')
         else:
-            unsubscribe_user_from_topic()
+            sms_subscription_arn, email_subscription_arn = get_user_subscription_arn(
+                conn, {'email_address': email, 'phone_number': phone_number})
+            unsubscribe_user_from_topic(
+                client, email_subscription_arn, sms_subscription_arn)
             remove_user_from_database()
             remove_user_topic_assignment_from_database()
 
