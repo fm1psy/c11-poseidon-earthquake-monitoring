@@ -95,9 +95,10 @@ def get_subscribed_users(conn, related_topics):
     with conn.cursor() as cur:
         for topic in related_topics:
             query = """
-            SELECT uta.user_id, u.email_address, u.phone_number, u.sms_subscription_arn, u.email_subscription_arn
+            SELECT uta.user_id, u.email_address, u.phone_number, u.sms_subscription_arn, u.email_subscription_arn, t.min_magnitude
             FROM user_topic_assignments AS uta
             JOIN users AS u ON u.user_id = uta.user_id
+            JOIN topics AS t ON uta.topic_id = t.topic_id
             WHERE uta.topic_id = %s;
             """
             cur.execute(query, (topic['topic_id'],))
@@ -109,25 +110,13 @@ def get_subscribed_users(conn, related_topics):
                     'email_address': row[1],
                     'phone_number': row[2],
                     'sms_subscription_arn': row[3],
-                    'email_subscription_arn': row[4]
+                    'email_subscription_arn': row[4],
+                    'min_magnitude': row[5]
                 }
                 if user not in interested_users:  # Avoid duplicates
                     interested_users.append(user)
 
     return interested_users
-
-
-def subscribe(client, email):
-    """
-    This probably wont stay on this script, may need to send to Ella so 
-    new users can get the subscription email
-    """
-    client.subscribe(
-        TopicArn=TOPIC,
-        Protocol='email',
-        Endpoint=email,
-        ReturnSubscriptionArn=True
-    )
 
 
 def find_related_topics(transform_data, topics):
@@ -139,14 +128,68 @@ def find_related_topics(transform_data, topics):
     return related_topics
 
 
+def publish_text(sns_client, phone_number, message):
+    """Publishes a text message via SNS"""
+    sns_client.publish(
+        PhoneNumber=phone_number,
+        Message=message
+    )
+
+
+
+def publish_email(sns_client, email_arn, subject, message):
+    """Publishes an email message via SNS"""
+    sns_client.publish(
+        TopicArn=email_arn,
+        Message=message,
+        Subject=subject
+    )
+
+
 if __name__ == "__main__":
     import extract
     import transform
+
     extract_data = extract.extract_process()
     transform_data = transform.transform_process(extract_data)
 
-    client = get_sns_client()
+    sns_client = get_sns_client()
     conn = get_connection()
+
+
     topics = get_topics(conn)
     related_topics = find_related_topics(transform_data, topics)
     subscribed_users = get_subscribed_users(conn, related_topics)
+
+    for user in subscribed_users:
+        message = f"Earthquake Alert! Magnitude {user['min_magnitude']} or above earthquake detected in your area"
+        publish_text(sns_client, user['phone_number'], message)
+        subject = "Earthquake Alert"
+        publish_email(
+            sns_client, user['email_subscription_arn'], subject, message)
+
+    conn.close()
+
+
+
+
+# def publish_text(sns_client):
+#     ...
+
+
+# def publish_email(sns_client):
+#     ...
+
+
+
+# if __name__ == "__main__":
+#     import extract
+#     import transform
+#     extract_data = extract.extract_process()
+#     transform_data = transform.transform_process(extract_data)
+
+#     client = get_sns_client()
+#     conn = get_connection()
+#     topics = get_topics(conn)
+#     related_topics = find_related_topics(transform_data, topics)
+#     subscribed_users = get_subscribed_users(conn, related_topics)
