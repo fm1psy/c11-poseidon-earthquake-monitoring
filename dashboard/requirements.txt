@@ -1,5 +1,6 @@
 streamlit
 streamlit-folium
+altair
 boto3
 python-dotenv
 altair
