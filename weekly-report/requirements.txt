@@ -1,3 +1,8 @@
 psycopg2-binary
 python-dotenv
 altair
+geopandas
+vega_datasets
+pandas
+xhtml2pdf 
+vl-convert-python

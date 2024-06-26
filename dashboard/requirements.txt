@@ -1,2 +1,8 @@
 streamlit
 streamlit-folium
+altair
+boto3
+python-dotenv
+altair
+vega_datasets
+psycopg2-binary

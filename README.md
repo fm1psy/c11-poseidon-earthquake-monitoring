@@ -18,7 +18,7 @@ For a visual representation of the project architecture and details on the desig
 
 ### Architecture Diagram
 
-![Architecture Diagram](https://github.com/fm1psy/c11-poseidon-earthquake-monitoring/blob/main/diagrams/earthquake_architecture.png)
+![Architecture Diagram](https://github.com/fm1psy/c11-poseidon-earthquake-monitoring/blob/main/diagrams/architecture_diagram.png)
 
 ### Design Decisions
 

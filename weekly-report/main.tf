@@ -5,14 +5,7 @@ provider "aws" {
   
 }
 
-# 1 S3 Bucket to store weekly PDF reports
-resource "aws_s3_bucket" "report_storage" {
-    bucket = "poseidon-weekly-reports-storage"
-    force_destroy = true
-  
-}
-
-# 2 Eventbridge Scheduler to target report generator every friday at 9am
+# 1 Eventbridge Scheduler to target report generator every friday at 9am
 resource "aws_scheduler_schedule" "reporting_scheduler" {
   name       = "poseidon-earthquake-weekly-reporting-scheduler"
   description = "schedules the weekly PDF report generator to run daily at 9am"
@@ -21,11 +14,11 @@ resource "aws_scheduler_schedule" "reporting_scheduler" {
     mode = "OFF"
   }
 
-  schedule_expression = "cron(0 9 * * ? *)"
+  schedule_expression = "cron(55 23 ? * 1 *)"
 
   target {
-    arn      = "" # TO FILL
-    role_arn = "" # TO FILL
+    arn      = aws_lambda_function.reporting_lambda.arn
+    role_arn = aws_iam_role.reporting_scheduler_role.arn
     
   }
 }
@@ -54,7 +47,7 @@ resource "aws_iam_policy" "scheduler_execute_reporting_policy" {
       {
         Effect = "Allow",
         Action = "lambda:InvokeFunction",
-        Resource = "" # TO FILL
+        Resource = aws_lambda_function.reporting_lambda.arn
       }
     ]
   })
@@ -65,22 +58,25 @@ resource "aws_iam_role_policy_attachment" "scheduler_reporting_lambda_invoke_pol
   policy_arn = aws_iam_policy.scheduler_execute_reporting_policy.arn
 }
 
-#3 Lamdba Function that generates weekly report
+#2 Lamdba Function that generates weekly report
 # ------- Function ----------
 resource "aws_lambda_function" "reporting_lambda" {
     function_name = "poseidon-weekly-reporting"
-    role = aws_iam_role.pipeline_lambda_role.arn
+    role = aws_iam_role.reporting_lambda_role.arn
     package_type = "Image"
-    image_uri = "" # TO FILL
+    image_uri = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c11-poseidon-reporting:latest" 
     architectures = ["x86_64"]
-    timeout = 45
+    memory_size = 5000
+    timeout = 600
     environment {
       variables = {
         DB_HOST = var.DB_HOST
         DB_NAME = var.DB_NAME
         DB_PASSWORD = var.DB_PASSWORD
         DB_PORT = var.DB_PORT
-        DB_USER = var.DB_USERNAME
+        DB_USERNAME = var.DB_USERNAME
+        STORAGE_BUCKET_NAME = var.STORAGE_BUCKET_NAME
+        SHAPEFILE_BUCKET_NAME = var.SHAPEFILE_BUCKET_NAME
       }
     }
 }
@@ -109,8 +105,13 @@ resource "aws_iam_policy" "reporting_s3_access_policy" {
     Statement = [
       {
         Effect = "Allow",
-        Action = ["s3:GetObject","s3:PutObject","s3:ListBucket"],
-        Resource = format("%s/*",aws_s3_bucket.report_storage.arn)
+        Action = ["s3:GetObject","s3:PutObject"],
+        Resource = ["arn:aws:s3:::poseidon-weekly-reporting-storage/*", "arn:aws:s3:::poseidon-shapefiles/*"]
+      },
+      {
+        Effect = "Allow",
+        Action = ["s3:ListBucket"],
+        Resource = ["arn:aws:s3:::poseidon-shapefiles"]
       }
     ]
   })

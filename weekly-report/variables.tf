@@ -32,6 +32,10 @@ variable "DB_HOST" {
   type = string
 }
 
-variable "DB_USERNAME" {
+variable "STORAGE_BUCKET_NAME" {
+  type = string
+}
+
+variable "SHAPEFILE_BUCKET_NAME" {
   type = string
 }
