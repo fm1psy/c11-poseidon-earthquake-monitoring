@@ -31,3 +31,38 @@ pip install -r requirements.txt
 | DB_NAME | The name of the database. |
 
 3. Run the script locally using `python api.py`
+
+## Retrieving earthquake data
+Once you have the api running, you should be able to connect to the database and retrieve the data accordingly. There is one endpoint, `earthquakes`, that can be accessed through the following:
+`URL:port/earthquakes`
+This will retrieve every earthquake recorded in the RDS. Below is an example of the expected response:
+```
+[
+  {
+    "alert": null,
+    "cause_of_event": "earthquake",
+    "cdi": null,
+    "depth": 8.0,
+    "dmin": null,
+    "earthquake_id": "ew1719231740",
+    "felt": null,
+    "gap": null,
+    "lat": "38.853900",
+    "lon": "-122.844700",
+    "magnitude": 4.1,
+    "magtype": "mw",
+    "mmi": null,
+    "network_name": "ew",
+    "nst": 4,
+    "significance": 259,
+    "status": "automatic",
+    "time": "Mon, 24 Jun 2024 12:22:22 GMT",
+    "title": "M 4.1 - 11 km WNW of Cobb, California"
+  }]
+```
+
+### Options
+Depending on your need for this api, it may be that you wish to retrieve a subset of the earthquake data. There are several options within the `earthquakes` endpoint to facilitate this. These are included using the following format:
+`URL:port/earthquakes?[OPTION]=[VALUE]`
+where `OPTION` is the field you wish to filter the data by, and `VALUE` is the value to filter by. Below is a table detailing the options available, their purpose, and the current filters accepted.
+
