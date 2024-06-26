@@ -9,6 +9,7 @@ from os import environ
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import geopandas as gpd
+from st_pages import Page, show_pages, add_page_title
 
 
 WEEK_CONSTRAINT = datetime.now() - timedelta(days=7)
@@ -168,6 +169,13 @@ def get_state_risk_map() -> alt.Chart:
 def create_home_page():
     """creates the home page"""
     st.set_page_config(layout="wide")
+    show_pages(
+        [
+            Page("main.py", "Home", "🏠"),
+            Page("pages/notifications.py",
+                 "Earthquake Notifications", ":rotating_light:"),
+        ]
+    )
     st.title("Earthquake Dashboard")
 
     load_dotenv()
