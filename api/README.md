@@ -66,3 +66,13 @@ Depending on your need for this api, it may be that you wish to retrieve a subse
 `URL:port/earthquakes?[OPTION]=[VALUE]`
 where `OPTION` is the field you wish to filter the data by, and `VALUE` is the value to filter by. Below is a table detailing the options available, their purpose, and the current filters accepted.
 
+|Option|Purpose|Accepted Inputs|
+|------|-------|---------------|
+|[status](https://earthquake.usgs.gov/data/comcat/index.php#status)|Limit data to events with the chosen status|reviewed, automatic, deleted|
+|[network](https://earthquake.usgs.gov/data/comcat/index.php#net)|Limit data to events whose contributor matches the chosen ID|ak, at, ci, hv, ld, mb, nc, nm, nn, pr, pt, se, us, uu, uw|
+|[alert](https://earthquake.usgs.gov/data/comcat/index.php#alert)|Limit data to events whose level of alert matches the filter|green, yellow, orange, red|
+|[mag_type](https://earthquake.usgs.gov/data/comcat/index.php#magType)|Limit data to events whose magnitude was calculated using the chosen method|md, ml, ms, mw, me, mi, mb, mlg|
+|[event](https://earthquake.usgs.gov/data/comcat/index.php#type)|Limit data to events whose cause matches the filter|earthquake, quarry blast|
+|[min_magnitude](https://earthquake.usgs.gov/data/comcat/index.php#mag)|Limit data to events with magnitudes above the chosen value|Any decimal/integer value. Typically, magnitudes will range from 0-10|
+|continent|Limit data to events within the chosen continent|North America, South America, Asia, Africa, Oceania, Europe, Antarctica|
+|country|Limit data to events within the chosen country|Any string. Note that if the country does not exist, no data will be returned|
