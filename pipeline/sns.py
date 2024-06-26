@@ -11,7 +11,6 @@ from psycopg2.extensions import connection, cursor
 import psycopg2.extras
 
 
-
 NOTIFICATION_RADIUS = 10
 
 load_dotenv()
