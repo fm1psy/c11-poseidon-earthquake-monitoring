@@ -1,87 +1,57 @@
+"""This script sends sns alerts to interested users"""
+
+from os import environ as ENV
 import boto3
 from dotenv import load_dotenv
-from os import environ as ENV
 from haversine import haversine
-import logging
 from psycopg2.extensions import connection, cursor
 import psycopg2.extras
 
-example_data = [{
-    "earthquake_id": "ak0247tc2ogk",
-    "alert": "green",
-    "status": "automatic",
-    "network": "ak",
-    "magtype": "ml",
-    "earthquake_type": "earthquake",
-    "magnitude": 6.0,
-    "lon": -2.964996,
-    "lat": 53.407624,
-    "depth": 0,
-    "time": '2024-06-24 12: 22: 22',
-    "felt": None,
-    "cdi": None,
-    "mmi": None,
-    "significance": 158,
-    "nst": None,
-    "dmin": None,
-    "gap": None,
-    "title": "M 3.2 - 88 km NW of Yakutat, Alaska"
-}]
 
+NOTIFICATION_RADIUS = 10
 
 load_dotenv()
 
 def get_sns_client():
-    try:
-        return boto3.client('sns',
+    """
+    Gets connection to the boto3 sns client
+    """
+    return boto3.client('sns',
                             aws_access_key_id=ENV.get("ACCESS_KEY"),
                             aws_secret_access_key=ENV.get("SECRET_ACCESS_KEY"))
 
-    except Exception as e:
-        logging.error(
-            f"An unexpected error occurred in establishing sns client: {e}")
-        return None
-    
 
 def get_connection() -> connection:
-    """Creates a psycopg2 connection"""
-    try:
-        return psycopg2.connect(host=ENV.get('DB_HOST'),
-                                database=ENV.get('DB_NAME'),
-                                user=ENV.get('DB_USERNAME'),
-                                password=ENV.get('DB_PASSWORD'),
-                                port=ENV.get('DB_PORT'))
-    except Exception as e:
-        logging.error(
-            f"An unexpected error occurred in establishing connection: {e}")
-        return None
+    """
+    Creates a psycopg2 connection
+    """
+    return psycopg2.connect(host=ENV.get('DB_HOST'),
+                            database=ENV.get('DB_NAME'),
+                            user=ENV.get('DB_USERNAME'),
+                            password=ENV.get('DB_PASSWORD'),
+                            port=ENV.get('DB_PORT'))
+
 
 
 def get_cursor(conn: connection) -> cursor:
-    """Creates a cursor based on provided psycopg2 connection"""
-    try:
-        return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    except Exception as e:
-        logging.error(
-            f"An unexpected error occurred in creating a cursor: {e}")
-        return None
-    
+    """
+    Creates a cursor based on provided psycopg2 connection
+    """
+    return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
 
 def calculate_distance(topic_coordinates, earthquake_coordinates):
     """
-    Calculates the distance of an earthquake to all topics
-    if within a certain distance based of dmin/mag then will
-    send notifications to all users subscribed to that topic
+    Calculates the distance in km between 2 coordinates
     """
     return int(haversine(topic_coordinates, earthquake_coordinates))
 
 
 def get_topics(conn):
     """
-    Gets topics from database
+    Gets all topics from database
     """
-    cursor = get_cursor(conn)
-    with cursor as cur:
+    with get_cursor(conn) as cur:
         query = """SELECT * FROM topics;"""
         cur.execute(query)
         topic_coordinates = cur.fetchall()
@@ -90,22 +60,30 @@ def get_topics(conn):
 
 def get_topic_detail(topic, detail):
     """
-    A function  to fetch: topic_arn, longitude, latitude, min_magnitude
+    A function which will be used to fetch: 
+    topic_arn, longitude, latitude, min_magnitude
     """
     return topic[detail]
-    
+
 
 def check_topics_in_range(eq_lon, eq_lat, topic):
-    topic_lat = get_topic_detail(topic, 'lat')
-    topic_lon = get_topic_detail(topic, 'lon')
+    """
+    Checks to see if the topic location is within 10km of
+    the most recent earthquake
+    """
+    topic_lat = float(get_topic_detail(topic, 'lat'))
+    topic_lon = float(get_topic_detail(topic, 'lon'))
     topic_coordinates = (topic_lat, topic_lon)
     earthquake_coordinates = (eq_lat, eq_lon)
-    if calculate_distance(earthquake_coordinates, topic_coordinates) <= 50:
+    if calculate_distance(topic_coordinates, earthquake_coordinates) <= NOTIFICATION_RADIUS:
         return True
     return False
 
 
 def get_user_information(user):
+    """
+    Gets the user information from users
+    """
     return {
         'user_id': user['user_id'],
         'email_address': user['email_address'],
@@ -115,13 +93,28 @@ def get_user_information(user):
     }
 
 
+
+def find_related_topics(latest_earthquakes, topics):
+    """
+    Finds all topics which will be interested in the most recent
+    earthquake
+    """
+    related_topics = []
+    for earthquakes in latest_earthquakes:
+        for topic in topics:
+            if earthquakes['magnitude'] >= topic['min_magnitude'] and \
+                check_topics_in_range(earthquakes['lon'], earthquakes['lat'], topic):
+                related_topics.append(topic)
+    return related_topics
+
+
+
 def get_subscribed_users(conn, related_topics):
     """
-    Find a way to get all users who have subscribed to the mailing list for targeted
-    topics.
+    Gets all user details for users who have subscribed to interested 
+    topics
     """
-    cursor = get_cursor(conn)
-    with cursor as cur:
+    with get_cursor(conn) as cur:
         for topic in related_topics:
             query = """
             SELECT uta.user_id, u.email_address, u.phone_number, t.topic_arn, t.min_magnitude
@@ -135,31 +128,23 @@ def get_subscribed_users(conn, related_topics):
             return [get_user_information(row) for row in rows]
 
 
-
-def find_related_topics(latest_earthquakes, topics):
-    related_topics = []
-    for earthquakes in latest_earthquakes:
-        for topic in topics:
-            if earthquakes['magnitude'] >= topic['min_magnitude'] and check_topics_in_range(earthquakes['lon'], earthquakes['lat'], topic):
-                related_topics.append(topic)
-    return related_topics
-
-
 def send_message(sns_client, arn, subject, message):
-    """Publishes an email message via SNS"""
+    """
+    Publishes a message to all subscribers of a topic via SNS
+    """
     sns_client.publish(
         TargetArn=arn,
         Message=message,
         Subject=subject
     )
 
-def send_text(sns_client, phone_number, message):
-    sns_client.publish(
-            PhoneNumber=phone_number,
-            Message=message
-        )
 
 def sns_alert_system(earthquakes):
+    """
+    This is the main function which runs through the functions to
+    get all users interested in relevant earthquakes, and sends a
+    message to all interested users.
+    """
     sns_client = get_sns_client()
     conn = get_connection()
 
@@ -168,12 +153,16 @@ def sns_alert_system(earthquakes):
     subscribed_users = get_subscribed_users(conn, related_topics)
 
     for user in subscribed_users:
-        message = f"Earthquake Alert! Magnitude {user['min_magnitude']} or above earthquake detected in your area"
+        magnitude = user['min_magnitude']
+        message = (
+            f"Earthquake Alert! Magnitude {magnitude} or above "
+            "earthquake detected in your area"
+        )
         subject = "Earthquake Alert"
-        send_text(sns_client, user['phone_number'], message)
         send_message(
-            sns_client, user['topic_arn'], subject, message)
-        
+            sns_client, user['topic_arn'], subject, message
+        )
+
 
 if __name__ == "__main__":
     import extract
@@ -181,5 +170,5 @@ if __name__ == "__main__":
 
     extract_data = extract.extract_process()
     transform_data = transform.transform_process(extract_data)
-
-    sns_alert_system(example_data)
+    if transform_data:
+        sns_alert_system(transform_data)

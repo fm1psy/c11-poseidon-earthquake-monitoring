@@ -160,3 +160,18 @@ def test_get_subscribed_users(example_users, example_topics):
 def test_find_related_topics(liverpool_earthquake, example_topics):
     assert find_related_topics(liverpool_earthquake, example_topics) == [
         {'topic_id': 12, 'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test_email', 'min_magnitude': 4.5, 'lon': -2.964996, 'lat': 53.407624}]
+
+
+def test_send_message():
+    sns_client_mock = MagicMock()
+    arn = 'arn:aws:sns:us-east-1:123456789012:example-topic'
+    subject = 'Test Subject'
+    message = 'Test Message'
+
+    send_message(sns_client_mock, arn, subject, message)
+
+    sns_client_mock.publish.assert_called_once_with(
+        TargetArn=arn,
+        Message=message,
+        Subject=subject
+    )
