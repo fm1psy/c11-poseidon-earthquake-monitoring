@@ -4,7 +4,7 @@ be easy to make the most out of through its endpoints."""
 import logging
 from os import environ as env
 from dotenv import load_dotenv
-from flask import Flask, Response, request
+from flask import Flask, Response, jsonify, request
 import psycopg2
 import psycopg2.extras
 from psycopg2.extensions import connection, cursor
@@ -184,9 +184,9 @@ def get_earthquakes() -> Response:
         }
 
         earthquakes = get_earthquake_data(user_filters)
-        return earthquakes, 200
+        return jsonify(earthquakes), 200
     except Exception as e:  # pylint: disable=broad-exception-caught
-        return {"error": str(e)}, 400
+        return jsonify({"error": str(e)}), 400
 
 
 if __name__ == "__main__":
