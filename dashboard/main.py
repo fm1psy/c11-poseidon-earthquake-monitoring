@@ -1,5 +1,5 @@
 import streamlit as st
-from charts import create_magnitude_map
+from charts import create_magnitude_map, create_risk_state_map
 import altair as alt
 from vega_datasets import data
 from psycopg2.extensions import connection, cursor
@@ -115,58 +115,9 @@ def calculate_risk_metric(state_grouping: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     return state_grouping
 
 
-def create_risk_state_map(state_grouping: gpd.GeoDataFrame,
-                          us_state_map: alt.topo_feature, ansi: pd.DataFrame) -> alt.Chart:
-    """creates colour-coded us state map dictated by risk score"""
-    state_grouping = pd.merge(
-        state_grouping, ansi[['state', 'id']], how='left', left_on='NAME', right_on='state')
-
-    base = alt.Chart(us_state_map).mark_geoshape(
-        fill='lightgray', stroke='black', strokeWidth=0.5)
-
-    chart = alt.Chart(us_state_map).mark_geoshape(stroke='black').encode(
-        color=alt.Color(
-            'risk_score:Q',
-            scale=alt.Scale(
-                domain=[state_grouping['risk_score'].min(
-                ), state_grouping['risk_score'].max()],
-                range=['#FDFD96', '#FF0000']
-            ),
-            legend=alt.Legend(title="Risk Score")),
-        tooltip=['risk_score:Q']
-    ).transform_lookup(
-        lookup='id',
-        from_=alt.LookupData(state_grouping, 'id', ['risk_score'])
-    ).properties(
-        width=1000,
-        height=600
-    ).project('albersUsa')
-
-    return base + chart
-
-
 def convert_to_dataframe(data: list[tuple], column_headers: list[str]) -> pd.DataFrame:
     """converts fetched sql data to a dataframe"""
     return pd.DataFrame(data, columns=column_headers)
-
-
-def get_state_risk_map() -> alt.Chart:
-    """gets earthquake data and creates magnitude map visual"""
-    conn = get_connection()
-    states_gdf = gpd.read_file(
-        './cb_2023_us_state_500k/cb_2023_us_state_500k.shp')
-    ansi = pd.read_csv(
-        'https://www2.census.gov/geo/docs/reference/state.txt', sep='|')
-    ansi.columns = ['id', 'abbr', 'state', 'statens']
-    usa_earthquakes = get_usa_only_earthquakes(conn)
-    usa_earthquakes = convert_to_dataframe(
-        usa_earthquakes, ["longitude", "latitude", "magnitude", "depth"])
-    usa_earthquakes = group_earthquake_by_state(usa_earthquakes, states_gdf)
-    usa_earthquakes = calculate_risk_metric(usa_earthquakes)
-
-    state_background = alt.topo_feature(data.us_10m.url, 'states')
-    risk_map = create_risk_state_map(usa_earthquakes, state_background, ansi)
-    return risk_map
 
 
 def get_most_recent_earthquake_above_mag_5(conn):
@@ -193,6 +144,25 @@ def get_avg_magnitude_last_30_days(conn):
         WHERE time >= %s; """, (MONTH_CONSTRAINT,))
         result = cur.fetchone()
     return result
+
+
+def get_state_risk_map() -> alt.Chart:
+    """gets earthquake data and creates magnitude map visual"""
+    conn = get_connection()
+    states_gdf = gpd.read_file(
+        './cb_2023_us_state_500k/cb_2023_us_state_500k.shp')
+    ansi = pd.read_csv(
+        'https://www2.census.gov/geo/docs/reference/state.txt', sep='|')
+    ansi.columns = ['id', 'abbr', 'state', 'statens']
+    usa_earthquakes = get_usa_only_earthquakes(conn)
+    usa_earthquakes = convert_to_dataframe(
+        usa_earthquakes, ["longitude", "latitude", "magnitude", "depth"])
+    usa_earthquakes = group_earthquake_by_state(usa_earthquakes, states_gdf)
+    usa_earthquakes = calculate_risk_metric(usa_earthquakes)
+
+    state_background = alt.topo_feature(data.us_10m.url, 'states')
+    risk_map = create_risk_state_map(usa_earthquakes, state_background, ansi)
+    return risk_map
 
 
 def create_home_page():

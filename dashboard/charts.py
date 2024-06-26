@@ -2,6 +2,7 @@ import streamlit as st
 import altair as alt
 from vega_datasets import data
 import pandas as pd
+import geopandas as gpd
 
 
 def create_magnitude_map(weekly_data: pd.DataFrame) -> alt.Chart:
@@ -29,3 +30,33 @@ def create_magnitude_map(weekly_data: pd.DataFrame) -> alt.Chart:
     )
 
     return background + points
+
+
+def create_risk_state_map(state_grouping: gpd.GeoDataFrame,
+                          us_state_map: alt.topo_feature, ansi: pd.DataFrame) -> alt.Chart:
+    """creates colour-coded us state map dictated by risk score"""
+    state_grouping = pd.merge(
+        state_grouping, ansi[['state', 'id']], how='left', left_on='NAME', right_on='state')
+
+    base = alt.Chart(us_state_map).mark_geoshape(
+        fill='lightgray', stroke='black', strokeWidth=0.5)
+
+    chart = alt.Chart(us_state_map).mark_geoshape(stroke='black').encode(
+        color=alt.Color(
+            'risk_score:Q',
+            scale=alt.Scale(
+                domain=[state_grouping['risk_score'].min(
+                ), state_grouping['risk_score'].max()],
+                range=['#FDFD96', '#FF0000']
+            ),
+            legend=alt.Legend(title="Risk Score")),
+        tooltip=['risk_score:Q']
+    ).transform_lookup(
+        lookup='id',
+        from_=alt.LookupData(state_grouping, 'id', ['risk_score'])
+    ).properties(
+        width=1000,
+        height=600
+    ).project('albersUsa')
+
+    return base + chart
