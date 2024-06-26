@@ -120,7 +120,6 @@ def get_subscribed_users(conn, related_topics):
     Find a way to get all users who have subscribed to the mailing list for targeted
     topics.
     """
-    interested_users = []
     cursor = get_cursor(conn)
     with cursor as cur:
         for topic in related_topics:
@@ -133,20 +132,8 @@ def get_subscribed_users(conn, related_topics):
             """
             cur.execute(query, (topic['topic_id'],))
             rows = cur.fetchall()
+            return [get_user_information(row) for row in rows]
 
-            for row in rows:
-                user = {
-                    'user_id': row['user_id'],
-                    'email_address': row['email_address'],
-                    'phone_number': row['phone_number'],
-                    'topic_arn': row['topic_arn'],
-                    'min_magnitude': row['min_magnitude']
-                }
-                print(user['phone_number'])
-                if user not in interested_users:
-                    interested_users.append(user)
-
-    return interested_users
 
 
 def find_related_topics(latest_earthquakes, topics):
@@ -184,8 +171,8 @@ def sns_alert_system(earthquakes):
         message = f"Earthquake Alert! Magnitude {user['min_magnitude']} or above earthquake detected in your area"
         subject = "Earthquake Alert"
         send_text(sns_client, user['phone_number'], message)
-        # send_message(
-        #     sns_client, user['topic_arn'], subject, message)
+        send_message(
+            sns_client, user['topic_arn'], subject, message)
         
 
 if __name__ == "__main__":

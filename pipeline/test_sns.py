@@ -133,3 +133,30 @@ def test_check_topic_not_in_range(example_transformed_data, example_topic):
     lon = example_transformed_data[0]['lon']
     lat = example_transformed_data[0]['lat']
     assert check_topics_in_range(lon, lat, example_topic) == False
+
+
+
+@pytest.mark.parametrize("detail, expected_result", [
+    ('user_id', 22),
+    ('email_address', 'trainee.joe.lam@sigmalabs.co.uk'),
+    ('phone_number', '447482569206'),
+    ('topic_arn', 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test_email'),
+    ('min_magnitude', 4.5)
+])
+def test_get_user_information(detail, expected_result, example_user):
+    assert get_user_information(example_user)[detail] == expected_result
+
+
+def test_get_subscribed_users(example_users, example_topics):
+    conn = MagicMock()
+    cursor = MagicMock()
+    conn.cursor.return_value.__enter__.return_value = cursor
+    cursor.execute.return_value = example_users
+    cursor.fetchall.return_value = example_users
+    assert get_subscribed_users(conn, example_topics) == [{'user_id': 22, 'email_address': 'trainee.joe.lam@sigmalabs.co.uk', 'phone_number': '447482569206', 'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test_email', 'min_magnitude': 4.5}, {
+        'user_id': 21, 'email_address': 'trainee.ella.jepsen@sigmalabs.co.uk', 'phone_number': '07552224539', 'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test', 'min_magnitude': 3}]
+
+
+def test_find_related_topics(liverpool_earthquake, example_topics):
+    assert find_related_topics(liverpool_earthquake, example_topics) == [
+        {'topic_id': 12, 'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test_email', 'min_magnitude': 4.5, 'lon': -2.964996, 'lat': 53.407624}]

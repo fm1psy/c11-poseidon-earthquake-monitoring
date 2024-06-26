@@ -554,26 +554,24 @@ def example_user():
         'min_magnitude': 4.5
     }
 
-    # cursor = get_cursor(conn)
-    # with cursor as cur:
-    #     for topic in related_topics:
-    #         query = """
-    #         SELECT uta.user_id, u.email_address, u.phone_number, t.topic_arn, t.min_magnitude
-    #         FROM user_topic_assignments AS uta
-    #         JOIN users AS u ON u.user_id = uta.user_id
-    #         JOIN topics AS t ON uta.topic_id = t.topic_id
-    #         WHERE uta.topic_id = %s;
-    #         """
-    #         cur.execute(query, (topic['topic_id'],))
-    #         rows = cur.fetchall()
-    #         return [get_user_information(row) for row in rows]
 
-# z
-# def get_user_information(user):
-#     return {
-#         'user_id': user['user_id'],
-#         'email_address': user['email_address'],
-#         'phone_number': user['phone_number'],
-#         'topic_arn': user['topic_arn'],
-#         'min_magnitude': user['min_magnitude']
-#     }
+@pytest.fixture
+def example_users():
+    return [{
+        'user_id': 22,
+        'email_address': 'trainee.joe.lam@sigmalabs.co.uk',
+        'phone_number': '447482569206',
+        'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test_email',
+        'min_magnitude': 4.5
+        },
+        {
+        'user_id': 21,
+        'email_address': 'trainee.ella.jepsen@sigmalabs.co.uk',
+        'phone_number': '07552224539',
+        'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test',
+        'min_magnitude': 3
+        }]
+
+
+
+
