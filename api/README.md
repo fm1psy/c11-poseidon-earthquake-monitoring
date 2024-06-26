@@ -9,7 +9,7 @@ This folder contains the codebase to deploy an API, whether locally or online. T
 |`test_api.py`|Contains all the tests developed to verify the api can run correctly.|
 
 ## Setup
-
+Before you can run this api, it would be useful to have a database setup; otherwise, you will not be able to connect and pull data from this api. Make sure you have following the instructions in the [database](https://github.com/fm1psy/c11-poseidon-earthquake-monitoring/tree/main/database) directory.
 
 ## Instructions to deploy the API
 Make sure you are inside the api folder before you follow these instructions. 
