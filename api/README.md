@@ -63,8 +63,8 @@ This will retrieve every earthquake recorded in the RDS. Below is an example of 
 
 ### Options
 Depending on your need for this api, it may be that you wish to retrieve a subset of the earthquake data. There are several options within the `earthquakes` endpoint to facilitate this. These are included using the following format:
-`URL:port/earthquakes?[OPTION]=[VALUE]`
-where `OPTION` is the field you wish to filter the data by, and `VALUE` is the value to filter by. Below is a table detailing the options available, their purpose, and the current filters accepted.
+`URL:port/earthquakes?[OPTION]=[VALUE]&[OPTION]=[VALUE]`
+where `OPTION` is the field you wish to filter the data by, and `VALUE` is the value to filter by. The `&` is optional, and can be used to include multiple options in your data extraction e.g. all earthquakes with a minimum magnitude of 5 within the country of Japan. Below is a table detailing the options available, their purpose, and the current filters accepted.
 
 |Option|Purpose|Accepted Inputs|
 |------|-------|---------------|
