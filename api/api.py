@@ -4,7 +4,7 @@ be easy to make the most out of through its endpoints."""
 import logging
 from os import environ as env
 from dotenv import load_dotenv
-from flask import Flask, Response, request
+from flask import Flask, Response, jsonify, request
 import psycopg2
 import psycopg2.extras
 from psycopg2.extensions import connection, cursor
@@ -33,6 +33,8 @@ CONTINENTS_TO_CODE = {
     "Antarctica": "AQ"
 }
 
+FILTER_MISINPUTS = [None, ""]
+
 
 def get_connection() -> connection:
     """Return a connection object associated with the earthquake database"""
@@ -60,17 +62,18 @@ def get_filter_queries(earthquake_filters: dict[str]) -> list[str]:
     magtype = earthquake_filters[MAG_TYPE_FILTER_KEY]
     event = earthquake_filters[EVENT_FILTER_KEY]
     min_magnitude = earthquake_filters[MIN_MAGNITUDE_FILTER_KEY]
-    if status is not None:
+    logging.info(status)
+    if status not in FILTER_MISINPUTS:
         res.append(f"s.status = '{status}'")
-    if network is not None:
+    if network not in FILTER_MISINPUTS:
         res.append(f"n.network_name = '{network}'")
-    if alert is not None:
+    if alert not in FILTER_MISINPUTS:
         res.append(f"a.alert_value = '{alert}'")
-    if magtype is not None:
+    if magtype not in FILTER_MISINPUTS:
         res.append(f"mt.magtype_value = '{magtype}'")
-    if event is not None:
+    if event not in FILTER_MISINPUTS:
         res.append(f"t.type_value = '{event}'")
-    if min_magnitude is not None:
+    if min_magnitude not in FILTER_MISINPUTS:
         res.append(f"e.magnitude >= '{min_magnitude}'")
     if res:
         res[0] = "WHERE "+res[0]
@@ -90,7 +93,7 @@ def filter_by_continent(fetched_data, continent: str) -> list[dict]:
     res = []
     if not is_continent_valid(continent):
         return fetched_data
-    continent_filter_code = CONTINENTS_TO_CODE[continent.title()]
+    continent_filter_code = CONTINENTS_TO_CODE[continent]
     for row in fetched_data:
         try:
             location = rg.get((row["lat"], row["lon"]))
@@ -109,18 +112,27 @@ def filter_by_country(fetched_data, country: str) -> list[dict]:
     """filter through the data fetched and return a list of events whose
     coordinates match the chosen country"""
     res = []
-
     for row in fetched_data:
         try:
             location = rg.get((row["lat"], row["lon"]))
-            if location["country"] == country.title():
+            if location["country"] == country:
                 res.append(row)
         except Exception as e:  # pylint: disable=broad-exception-caught
             logging.error(e)
     return res
 
 
-def get_all_earthquakes(earthquake_filters: dict[str]) -> list[dict]:
+def filter_by_location(fetched_data, country: str, continent: str) -> list[dict]:
+    """filter through the data fetched and return a list of events whose
+    coordinates correspond to the chosen location"""
+    if country:
+        return filter_by_country(fetched_data, country.title())
+    if continent:
+        return filter_by_continent(fetched_data, continent.title())
+    return fetched_data
+
+
+def get_earthquake_data(earthquake_filters: dict[str]) -> list[dict]:
     """Return a list of all earthquake data from the database."""
     conn = get_connection()
 
@@ -133,6 +145,7 @@ def get_all_earthquakes(earthquake_filters: dict[str]) -> list[dict]:
     LEFT JOIN networks AS n USING(network_id)
     LEFT JOIN alerts AS a USING(alert_id)
     """
+    print(earthquake_filters.values())
     if any(value is not None for value in earthquake_filters.values()):
         query_filter_commands = get_filter_queries(earthquake_filters)
         search_query += " AND ".join(query_filter_commands)
@@ -140,15 +153,12 @@ def get_all_earthquakes(earthquake_filters: dict[str]) -> list[dict]:
     with get_cursor(conn) as cur:
         cur.execute(search_query)
         fetched_earthquakes = cur.fetchall()
+
     conn.close()
     continent = earthquake_filters[CONTINENT_FILTER_KEY]
     country = earthquake_filters[COUNTRY_FILTER_KEY]
-    if continent is not None:
-        fetched_earthquakes = filter_by_continent(
-            fetched_earthquakes, earthquake_filters[CONTINENT_FILTER_KEY])
-    if country is not None:
-        fetched_earthquakes = filter_by_country(
-            fetched_earthquakes, earthquake_filters[COUNTRY_FILTER_KEY])
+    fetched_earthquakes = filter_by_location(
+        fetched_earthquakes, country, continent)
     return fetched_earthquakes
 
 
@@ -173,10 +183,10 @@ def get_earthquakes() -> Response:
             COUNTRY_FILTER_KEY: request.args.get("country")
         }
 
-        earthquakes = get_all_earthquakes(user_filters)
-        return earthquakes, 200
+        earthquakes = get_earthquake_data(user_filters)
+        return jsonify(earthquakes), 200
     except Exception as e:  # pylint: disable=broad-exception-caught
-        return {"error": str(e)}, 400
+        return jsonify({"error": str(e)}), 400
 
 
 if __name__ == "__main__":
