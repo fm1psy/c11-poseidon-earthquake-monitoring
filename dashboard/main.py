@@ -195,7 +195,8 @@ def get_avg_magnitude_last_30_days(conn):
     return result
 
 
-if __name__ == "__main__":
+def create_home_page():
+    """creates the home page"""
     st.set_page_config(layout="wide")
     st.title("Earthquake Dashboard")
 
@@ -222,3 +223,7 @@ if __name__ == "__main__":
     st.subheader(
         "The map below shows the states of the US colour coded by the risk posed by earthquakes:")
     st.altair_chart(get_state_risk_map())
+
+
+if __name__ == "__main__":
+    create_home_page()
