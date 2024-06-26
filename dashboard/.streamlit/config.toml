@@ -3,7 +3,11 @@ gatherUsageStats = false
 
 [theme]
 base = "light"
-primaryColor = "#ADD8E6"
+primaryColor = "#EDF6F9"
+backgroundColor = "#83C5BE"
+secondaryBackgroundColor = "#006D77"
+textColor = "#31333F"
+
 
 [client]
 showSidebarNavigation = true
