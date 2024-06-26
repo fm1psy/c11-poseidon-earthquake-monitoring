@@ -36,7 +36,7 @@ def get_file_keys_from_bucket(s3, bucket_name: str) -> list[str]:
 
 
 def download_shapefiles(bucket_name: str, s3: client, folder_path: str) -> None:
-    """Downloads shapefiles from bucket"""
+    """Downloads shapefiles for US state mapping"""
     file_keys = get_file_keys_from_bucket(s3, bucket_name)
     for file_key in file_keys:
         file_path = os.path.join(folder_path, file_key)
