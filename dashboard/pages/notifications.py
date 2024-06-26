@@ -13,6 +13,7 @@ DEFAULT_LON = 0.1276
 
 
 def get_connection():
+    """gets connnection to database"""
     return psycopg2.connect(host=environ['DB_HOST'],
                             dbname=environ['DB_NAME'],
                             user=environ['DB_USERNAME'],
@@ -21,6 +22,7 @@ def get_connection():
 
 
 def get_sns_client():
+    """returns sns client"""
     load_dotenv()
     return boto3.client(
         'sns',
@@ -29,6 +31,7 @@ def get_sns_client():
 
 
 def create_topic(client, user_info):
+    """creates sns topic for particular longitude, latitude and magnitude"""
     response = client.create_topic(
         Name=f"c1""1-poseidon-test"""
     )
@@ -36,6 +39,7 @@ def create_topic(client, user_info):
 
 
 def subscribe_to_topic(client, topic_ARN, user_info):
+    """subscribes a user to a given topic"""
     email_response = client.subscribe(
         TopicArn=topic_ARN,
         Protocol='email',
@@ -50,6 +54,7 @@ def subscribe_to_topic(client, topic_ARN, user_info):
 
 
 def check_if_topic_exists(conn, user_info):
+    """checks if given topic already exists"""
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
         cursor.execute(f"""select topic_id, topic_arn from topics
                             where min_magnitude='{user_info['magnitude']}' and lon='{user_info['selected_lon']}' and lat='{user_info['selected_lat']}';""")
@@ -60,6 +65,7 @@ def check_if_topic_exists(conn, user_info):
 
 
 def upload_user_to_database(conn, user_info):
+    """uploads new user to the user table in database"""
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
         cursor.execute(f"""insert into users (email_address, phone_number) values (%s, %s) returning user_id;""", (
             user_info['email'], user_info['phone_number']))
@@ -67,6 +73,7 @@ def upload_user_to_database(conn, user_info):
 
 
 def check_if_user_exists(conn, user_info):
+    """checks if given user already exists"""
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
         cursor.execute(f"""select user_id from users
                             where email_address = '{user_info['email']}' and phone_number = '{user_info['phone_number']}';""")
@@ -77,6 +84,7 @@ def check_if_user_exists(conn, user_info):
 
 
 def upload_topic_to_database(conn, user_info, topic_info):
+    """uploads new topic to topics table in database"""
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
         cursor.execute(f"""insert into topics (topic_arn, min_magnitude, lon, lat) values (%s, %s, %s, %s) returning topic_id;""", (topic_info['TopicArn'],
                                                                                                                                     user_info['magnitude'], user_info['selected_lon'], user_info['selected_lat']))
@@ -84,12 +92,14 @@ def upload_topic_to_database(conn, user_info, topic_info):
 
 
 def upload_user_subscription_to_database(conn, user_id, topic_id, email_subscription, sms_subscription):
+    """uploads user_id, topic_id, email_subscription_arn and sms_subscription_arn to user_topic_assignments table in database"""
     with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
         cursor.execute(f"""insert into user_topic_assignments (user_id, topic_id, email_subscription_arn, sms_subscription_arn) values (%s, %s, %s, %s);""", (user_id,
                        topic_id, email_subscription['SubscriptionArn'], sms_subscription['SubscriptionArn']))
 
 
 def create_subscription_form():
+    """creates notification subscription form"""
     email = ""
     phone_number = ""
     m = folium.Map(location=[DEFAULT_LAT, DEFAULT_LON], zoom_start=10)
@@ -122,6 +132,7 @@ def create_subscription_form():
 
 
 def unsubscribe_user_from_topic(client, email_subscription_arn, sms_subscription_arn):
+    """unsubscribes given user from topic that matches the given email and sms subscription arns"""
     client.unsubscribe(
         SubscriptionArn=email_subscription_arn
     )
@@ -139,6 +150,7 @@ def remove_user_topic_assignment_from_database():
 
 
 def get_user_subscription_arn(conn, user_info):
+    """returns a given users email and sms subscription arns"""
     with conn.cursor as cursor:
         cursor.execute(f"""select uta.sms_subscription_arn, uta.email_subscription_arn from user_topic_assignments as uta
                             join users as u on u.user_id = uta.user_id
@@ -148,6 +160,7 @@ def get_user_subscription_arn(conn, user_info):
 
 
 def create_unsubscribe_form():
+    """creates unsubscribe form"""
     email = ""
     phone_number = ""
     with st.form("notification-unsubscribe", clear_on_submit=True, border=True):
@@ -174,7 +187,8 @@ def create_unsubscribe_form():
             remove_user_topic_assignment_from_database()
 
 
-if __name__ == "__main__":
+def create_notifications_page():
+    """creaters the notification subscription page"""
     user_info = create_subscription_form()
     create_unsubscribe_form()
     if user_info != []:
@@ -190,3 +204,7 @@ if __name__ == "__main__":
         upload_user_subscription_to_database(
             conn, user_id, topic_id, email_subscription, sms_subscription)
         conn.commit()
+
+
+if __name__ == "__main__":
+    create_notifications_page()
