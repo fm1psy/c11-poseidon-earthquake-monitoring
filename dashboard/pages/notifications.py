@@ -122,7 +122,7 @@ def create_subscription_form():
     m.add_child(folium.LatLngPopup())
 
     with st.form("notification-subscription", clear_on_submit=True, border=True):
-        st.header("Subscribe for earthquake notifications")
+        st.header("Subscribe for Earthquake Notifications")
         email = st.text_input("Email:")
         phone_number = st.text_input("Phone Number:")
         magnitude = st.selectbox(
