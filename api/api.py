@@ -125,12 +125,11 @@ def filter_by_country(fetched_data, country: str) -> list[dict]:
 def filter_by_location(fetched_data, country: str, continent: str) -> list[dict]:
     """filter through the data fetched and return a list of events whose
     coordinates correspond to the chosen location"""
-    if country is None and continent is None:
-        return fetched_data
     if country:
         return filter_by_country(fetched_data, country.title())
-
-    return filter_by_continent(fetched_data, continent.title())
+    if continent:
+        return filter_by_continent(fetched_data, continent.title())
+    return fetched_data
 
 
 def get_earthquake_data(earthquake_filters: dict[str]) -> list[dict]:

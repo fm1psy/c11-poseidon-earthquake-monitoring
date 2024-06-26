@@ -1,9 +1,10 @@
 # pylint: skip-file
 from dotenv import load_dotenv
 import pytest
-from api import app, STATUS_FILTER_KEY, NETWORK_FILTER_KEY, ALERT_FILTER_KEY, MAG_TYPE_FILTER_KEY, EVENT_FILTER_KEY, MIN_MAGNITUDE_FILTER_KEY, CONTINENT_FILTER_KEY, COUNTRY_FILTER_KEY, get_filter_queries, filter_by_continent
+from api import app, STATUS_FILTER_KEY, NETWORK_FILTER_KEY, ALERT_FILTER_KEY, MAG_TYPE_FILTER_KEY, EVENT_FILTER_KEY, MIN_MAGNITUDE_FILTER_KEY, CONTINENT_FILTER_KEY, COUNTRY_FILTER_KEY, get_filter_queries, filter_by_continent, filter_by_country, filter_by_location, is_continent_valid
 
 from unittest.mock import patch
+
 
 load_dotenv()
 
@@ -89,7 +90,7 @@ def test_endpoint_index(client):
     assert "message" in response.json
 
 
-@patch("api.get_all_earthquakes")
+@patch("api.get_earthquake_data")
 def test_endpoint_get_earthquakes(mock_all_earthquakes, client):
     mock_all_earthquakes.return_value = [{"test": "output"}]
     response = client.get("/earthquakes")
@@ -141,3 +142,22 @@ def test_filter_by_continent(example_api_response):
     assert filter_by_continent(example_api_response, "Africa") == []
     assert filter_by_continent(
         example_api_response, "North America") == example_api_response
+
+
+def test_is_continent_valid():
+    assert is_continent_valid("Asia") == True
+
+
+def test_is_continent_invalid():
+    assert is_continent_valid("Three") == False
+
+
+@patch("api.filter_by_country")
+@patch("api.filter_by_continent")
+@pytest.mark.parametrize("inputs, expect", [(("china", "africa"), (True, False)),
+                                            ((None, "africa"), (False, True)),
+                                            (("china", None), (True, False)),
+                                            ((None, None), (False, False))])
+def test_filter_by_location(mock_continent_filter, mock_country_filter, inputs, expect):
+    filter_by_location([{}, {}], inputs[0], inputs[1])
+    mock_continent_filter.assert_called_once, mock_country_filter.assert_called_once == expect
