@@ -3,10 +3,11 @@ gatherUsageStats = false
 
 [theme]
 base = "light"
-primaryColor = "#EDF6F9"
-backgroundColor = "#83C5BE"
-secondaryBackgroundColor = "#006D77"
-textColor = "#31333F"
+
+primaryColor = "#30B6E2"
+backgroundColor = "#006D77"
+secondaryBackgroundColor = "#6BB5AE"
+textColor = "#EDF6F9"
 
 
 [client]
