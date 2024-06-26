@@ -9,7 +9,9 @@ from os import environ
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import geopandas as gpd
+
 from st_pages import Page, show_pages, add_page_title
+
 
 
 WEEK_CONSTRAINT = datetime.now() - timedelta(days=7)
