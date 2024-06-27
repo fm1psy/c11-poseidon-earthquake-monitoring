@@ -1,3 +1,4 @@
+# Data
 data "aws_ecs_cluster" "c11_ecs_cluster" {
   cluster_name = "c11-ecs-cluster"
 }

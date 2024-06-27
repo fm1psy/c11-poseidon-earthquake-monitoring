@@ -64,7 +64,7 @@ resource "aws_ecs_task_definition" "dashboard_task" {
   ])
 }
 
-# ------------- END --------------------------------
+# ------------- END -------------------------------
 # 2 Dashboard Security Group
 resource "aws_security_group" "dashboard_sg" {
   name        = "poseidon-dashboard-sg"
