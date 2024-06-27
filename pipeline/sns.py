@@ -91,15 +91,20 @@ def get_topic_detail(topic: dict, detail: str) -> str | None:
         logging.error(f"Error getting topic details: {e}")
         return None
 
-def get_notification_distance(magnitude):
+
+def get_notification_distance(magnitude: float) -> int | None:
+    """
+    Gets distance to notifications based on how strong the magnitude is.
+    """
     if not isinstance(magnitude, (int, float)):
         return None
-    if 4 > magnitude:
+    if magnitude < 4:
         return 50
-    if 5 > magnitude > 4:
+    if 4 <= magnitude < 5:
         return 150
-    if magnitude > 5:
+    if magnitude >= 5:
         return 200
+    return None
 
 
 def check_topic_range(eq_lon: str, eq_lat: str, topic: dict, magnitude: float) -> bool:
@@ -152,8 +157,11 @@ def find_related_topics(earthquake: dict, topics) -> list:
     try:
         related_topics = []
         for topic in topics:
+            lon = earthquake['lon']
+            lat = earthquake['lat']
+            magnitude = earthquake['magnitude']
             if earthquake['magnitude'] >= topic['min_magnitude'] and \
-                    check_topic_range(earthquake['lon'], earthquake['lat'], topic, earthquake['magnitude']):
+                    check_topic_range(lon, lat, topic, magnitude):
                 related_topics.append(topic)
         return related_topics
     except Exception as e:
@@ -237,7 +245,7 @@ SAFETY TIPS:
 
 5. IF IN A CAR, PULL OVER SAFELY: Pull over to a safe location and stay inside until the shaking stops.
 
-Stay safe and follow these guidelines until the shaking subsides.
+Stay safe and follow these guidelines until the shaking subsides. Be aware of potential aftershocks.
 """
             )
             subject = "EARTHQUAKE WARNING"
