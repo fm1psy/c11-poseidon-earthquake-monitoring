@@ -153,7 +153,7 @@ def handler(event=None, context=None):
                 border-collapse: collapse;
             }}
             .date {{
-                padding-left: 100%;
+                padding-left: 240px;
             }}
             .data-table, .data-table th, .data-table td {{
                 border: 1px solid black;
@@ -212,7 +212,10 @@ def handler(event=None, context=None):
                     <img src="{state_html}" alt="State Risk Map" style="height:200px; width: 400px;">
                 </td>
                 <td style="padding-left: 20px;">
-                    <p>Text description or analysis related to the state risk map goes here.</p>
+                    <p>The visual is a color-coded map of the United States, with each state shaded to represent varying
+                    levels of earthquake risk. States with the highest risk are marked in red, indicating areas with significant
+                    seismic activity and potential for major earthquakes. States with moderate risk are shown in orange and yellow,
+                    greyed states have experienced no earthquakes.</p>
                 </td>
             </tr>
         </table>
@@ -222,7 +225,10 @@ def handler(event=None, context=None):
                     <img src="{pie_html}" alt="Pie" style="height:200px; width: 200px;">
                 </td>
                 <td style="padding-left: 20px;">
-                    <p>Text description or analysis related to the two layer pie chart goes here.</p>
+                    <p>The two-layer pie chart features an inner layer that displays the total earthquake count for
+                    four major U.S. states: Alaska, Hawaii, Texas and Nevada. The outer layer further breaks down
+                    these counts by showing the proportion of earthquakes within each state that fall into two magnitude
+                    ranges: 1-2 and 2-3.</p>
                 </td>
             </tr>
         </table>
