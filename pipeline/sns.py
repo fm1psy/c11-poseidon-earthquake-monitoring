@@ -228,13 +228,13 @@ def sns_alert_system(earthquakes: list[dict]):
                 magnitude = earthquake['magnitude']
                 eq_coordinates = (earthquake['lon'], earthquake['lat'])
                 topic_coordinates = (user['lon'], user['lat'])
+                title = earthquake['title'].split(' - ')[1]
                 distance = calculate_distance(topic_coordinates, eq_coordinates)
                 message = (
 f"""
-
 **EARTHQUAKE WARNING!**
 
-A magnitude {magnitude} or above earthquake has been detected within {distance}km of your area.
+A magnitude {magnitude} earthquake has been detected within {distance}km of your area, {title}
 
 SAFETY TIPS:
 
@@ -262,5 +262,28 @@ if __name__ == "__main__":
     import transform
     extract_data = extract.extract_process()
     transform_data = transform.transform_process(extract_data)
+    example_data = [{
+        "earthquake_id": "ak0247tc2ogk",
+        "alert": "green",
+        "status": "automatic",
+        "network": "ak",
+        "magtype": "ml",
+        "earthquake_type": "earthquake",
+        "magnitude": 6.0,
+        "lon": -2.964996,
+        "lat": 53.607624,
+        "depth": 0,
+        "time": '2024-06-24 12: 22: 22',
+        "felt": None,
+        "cdi": None,
+        "mmi": None,
+        "significance": 158,
+        "nst": None,
+        "dmin": None,
+        "gap": None,
+        "title": "M 3.2 - 88 km NW of Yakutat, Alaska"
+    }
+    ]
     if transform_data:
         sns_alert_system(transform_data)
+    sns_alert_system(example_data)
