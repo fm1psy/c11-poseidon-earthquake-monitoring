@@ -106,7 +106,7 @@ def calculate_risk_metric(state_grouping: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     calculates risk associated with living in a us state
     susceptible to earthquakes
     """
-    state_grouping['risk_score'] = (
+    state_grouping['relative_risk'] = (
         state_grouping['num_earthquakes'] * WEIGHTING.get('num_earthquakes') +
         state_grouping['avg_magnitude'] * WEIGHTING.get('avg_magnitude') +
         state_grouping['max_magnitude'] * WEIGHTING.get('max_magnitude') +
@@ -172,6 +172,12 @@ def create_magnitude_table():
     return st.table(pd.DataFrame.from_dict(data, orient='columns'))
 
 
+def create_risk_table():
+    data = {'Parameter': ['Number of Earthquakes',
+                          'Average Magnitude', 'Maximum Magnitude', 'Average Depth'], 'Risk Weighting': ['0.2', '0.3', '0.4', '0.1']}
+    return st.table(pd.DataFrame.from_dict(data, orient='columns'))
+
+
 def create_home_page():
     """creates the home page"""
     st.set_page_config(layout="wide")
@@ -213,10 +219,12 @@ def create_home_page():
         'lon', 'lat', 'magnitude', 'depth'])))
 
     st.subheader(
-        "The map below shows the states of the US colour coded by the risk posed by earthquakes:")
+        "The map below shows the states of the US colour coded by the relative risk posed by earthquakes:")
     st.altair_chart(get_state_risk_map())
 
-    st.write("Risk is calculated by ")
+    with st.expander("Click here for more information about how earthquake risk is calculated:"):
+        st.write("To determine the relative risk associated with living in a US state susceptible to earthquakes a risk metric was calculated as function of 4 different parameters, with each parameter assigned a risk weighting score dictating the their contribution to the final overall score.")
+        create_risk_table()
 
 
 if __name__ == "__main__":
