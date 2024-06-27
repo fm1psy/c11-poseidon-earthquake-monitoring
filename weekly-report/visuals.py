@@ -158,17 +158,19 @@ def get_total_number_earthquakes(conn: connection) -> list[tuple]:
     return result[0]
 
 
-def group_earthquake_by_state(usa_earthquakes: pd.DataFrame,
-                              state_boundaries: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-    """groups earthquakes by what state they occur in"""
+def join_state_locations(usa_earthquakes: pd.DataFrame, state_boundaries) -> gpd.GeoDataFrame:
+    """map long and lat coordinates to states in US"""
     usa_earthquakes = gpd.GeoDataFrame(usa_earthquakes, geometry=gpd.points_from_xy(
         usa_earthquakes['longitude'], usa_earthquakes['latitude']))
 
     usa_earthquakes.crs = state_boundaries.crs
 
-    usa_earthquakes = gpd.sjoin(usa_earthquakes, state_boundaries[['geometry', 'NAME']],
-                                how="left", predicate="within").dropna(subset=['NAME'])
+    return gpd.sjoin(usa_earthquakes, state_boundaries[['geometry', 'NAME']],
+                     how="left", predicate="within").dropna(subset=['NAME'])
 
+
+def group_earthquake_by_state(usa_earthquakes: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    """groups earthquakes by what state they occur in"""
     return usa_earthquakes.groupby('NAME').agg(num_earthquakes=('magnitude', 'size'),
                                                avg_magnitude=(
                                                    'magnitude', 'mean'),
@@ -237,6 +239,7 @@ def get_state_risk_map() -> alt.Chart:
     usa_earthquakes = get_usa_only_earthquakes(conn)
     usa_earthquakes = convert_to_dataframe(
         usa_earthquakes, ["longitude", "latitude", "magnitude", "depth"])
+    usa_earthquakes = join_state_locations(usa_earthquakes, states_gdf)
     usa_earthquakes = group_earthquake_by_state(usa_earthquakes, states_gdf)
     usa_earthquakes = calculate_risk_metric(usa_earthquakes)
 
@@ -267,5 +270,63 @@ def get_significance_bar() -> alt.Chart:
     return significance
 
 
-if __name__ == "__main__":
+def create_two_layer_pie() -> alt.Chart:
+    """creates two-layer-pie chart"""
     conn = get_connection()
+    states_gdf = gpd.read_file('/tmp/data/cb_2023_us_state_500k.shp')
+    ansi = pd.read_csv(
+        'https://www2.census.gov/geo/docs/reference/state.txt', sep='|')
+    ansi.columns = ['id', 'abbr', 'state', 'statens']
+    usa_earthquakes = get_usa_only_earthquakes(conn)
+    usa_earthquakes = convert_to_dataframe(
+        usa_earthquakes, ["longitude", "latitude", "magnitude", "depth"])
+    usa_earthquakes = join_state_locations(usa_earthquakes, states_gdf)
+
+    bins = [1, 2, 3]
+    labels = ['1-2', '2-3']
+    usa_earthquakes['magnitude_bin'] = pd.cut(
+        usa_earthquakes['magnitude'], bins=bins, labels=labels, right=False)
+
+    usa_earthquakes = usa_earthquakes.groupby(['NAME', 'magnitude_bin']
+                                              ).size().reset_index(name='count')
+    usa_earthquakes = usa_earthquakes[usa_earthquakes['NAME'].isin(
+        ["Alaska", "Hawaii", "Texas", "Nevada"])]
+
+    total_count = usa_earthquakes.groupby('NAME')['count'].sum().reset_index()
+
+    inner = alt.Chart(total_count).mark_arc(innerRadius=0, outerRadius=100).encode(
+        theta=alt.Theta(field='count', type='quantitative', stack=True),
+        color=alt.Color(field='NAME', type='nominal', legend=None))
+
+    inner_text = alt.Chart(total_count).mark_text(radius=80, size=10).encode(
+        theta=alt.Theta(field='count', type='quantitative', stack=True),
+        text=alt.Text(field='NAME', type='nominal'),
+        color=alt.value('black')
+    )
+
+    outer = alt.Chart(usa_earthquakes).mark_arc(innerRadius=100, outerRadius=140).encode(
+        theta=alt.Theta(field='count', type='quantitative', stack=True),
+        color=alt.Color(field='magnitude_bin', type='nominal'),
+        order=alt.Order(field='NAME'),
+        detail='NAME'
+    )
+
+    outer_text = alt.Chart(usa_earthquakes).mark_text(radius=120, size=12).encode(
+        theta=alt.Theta(field='count', type='quantitative', stack=True),
+        text=alt.Text(field='magnitude_bin', type='nominal'),
+        color=alt.value('black'),
+        order=alt.Order(field='NAME'),
+        detail='NAME'
+    )
+
+    chart = (inner + outer + inner_text + outer_text)
+    chart.properties(width=800, height=800)
+
+    return chart
+
+
+if __name__ == "__main__":
+    get_state_risk_map()
+    get_magnitude_map()
+    get_significance_bar()
+    create_two_layer_pie()
