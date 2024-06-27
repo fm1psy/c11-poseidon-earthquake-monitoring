@@ -6,7 +6,7 @@ import logging
 from extract import extract_process
 from transform import transform_process
 from load import load_process
-from sns import 
+from sns import sns_alert_system
 
 def run_pipeline():
     logging.basicConfig(level=logging.INFO,
@@ -18,22 +18,28 @@ def run_pipeline():
     except Exception as e:
         logging.error(f'Error during extraction: {e}')
         return
+    
+    if extracted_data:
+        try:
+            transformed_data = transform_process(extracted_data)
+        except Exception as e:
+            logging.error(f'Error during transform: {e}')
+            return
 
-    try:
-        transformed_data = transform_process(extracted_data)
-    except Exception as e:
-        logging.error(f'Error during transform: {e}')
+        try:
+            sns_alert_system(transformed_data)
+        except Exception as e:
+            logging.error(f'Error when sending SNS alerts: {e}')
+            return
+        try:
+            load_process(transformed_data)
+            logging.info('Pipeline completed running')
+
+        except Exception as e:
+            logging.error(f'Error during load: {e}')
+
+    else:
         return
-
-    try 
-    try:
-        load_process(transformed_data)
-        logging.info('Pipeline completed running')
-
-    except Exception as e:
-        logging.error(f'Error during load: {e}')
-
-
 
 if __name__ == "__main__":
     run_pipeline()

@@ -186,7 +186,9 @@ def get_subscribed_users(conn: connection, related_topics: list) -> list:
                 """
                 cur.execute(query, (topic['topic_id'],))
                 rows = cur.fetchall()
+
                 return [get_user_information(row) for row in rows]
+
     except Exception as e:
         logging.error(
             f"An unexpected error occurred getting subscribed users: {e}")
@@ -221,12 +223,13 @@ def sns_alert_system(earthquakes: list[dict]):
     for earthquake in earthquakes:
         related_topics = find_related_topics(earthquake, topics)
         subscribed_users = get_subscribed_users(conn, related_topics)
-        for user in subscribed_users:
-            magnitude = earthquake['magnitude']
-            eq_coordinates = (earthquake['lon'], earthquake['lat'])
-            topic_coordinates = (user['lon'], user['lat'])
-            distance = calculate_distance(topic_coordinates, eq_coordinates)
-            message = (
+        if subscribed_users:
+            for user in subscribed_users:
+                magnitude = earthquake['magnitude']
+                eq_coordinates = (earthquake['lon'], earthquake['lat'])
+                topic_coordinates = (user['lon'], user['lat'])
+                distance = calculate_distance(topic_coordinates, eq_coordinates)
+                message = (
 f"""
 
 **EARTHQUAKE WARNING!**
