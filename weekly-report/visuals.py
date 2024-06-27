@@ -102,7 +102,7 @@ def get_usa_only_earthquakes(conn: connection) -> list[tuple]:
 
 def get_top_significant_earthquakes(conn: connection) -> list[tuple]:
     """
-    Get top 5 significant earthquakes
+    Get top 10 significant earthquakes
     A number describing how significant the event is.
     Larger numbers indicate a more significant event.
     This value is determined on a number of factors,
@@ -240,7 +240,7 @@ def get_state_risk_map() -> alt.Chart:
     usa_earthquakes = convert_to_dataframe(
         usa_earthquakes, ["longitude", "latitude", "magnitude", "depth"])
     usa_earthquakes = join_state_locations(usa_earthquakes, states_gdf)
-    usa_earthquakes = group_earthquake_by_state(usa_earthquakes, states_gdf)
+    usa_earthquakes = group_earthquake_by_state(usa_earthquakes)
     usa_earthquakes = calculate_risk_metric(usa_earthquakes)
 
     state_background = alt.topo_feature(data.us_10m.url, 'states')
