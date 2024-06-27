@@ -1,14 +1,16 @@
 FROM python:latest
 
+WORKDIR /app
+
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt
 
-COPY main.py
-COPY charts.py
-COPY .streamlit/config.toml /root/.streamlit/config.toml
-COPY pages/notifications.py /root/pages/notifications.py
-COPY pages/weekly_report.py /root/pages/weekly_report.py
+COPY main.py .
+COPY charts.py .
+COPY .streamlit/config.toml ./.streamlit/config.toml
+COPY pages/notifications.py ./pages/notifications.py
+COPY pages/weekly_report.py ./pages/weekly_report.py
 
 EXPOSE 8501
 

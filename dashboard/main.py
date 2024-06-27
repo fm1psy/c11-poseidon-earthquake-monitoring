@@ -5,15 +5,20 @@ from vega_datasets import data
 from psycopg2.extensions import connection, cursor
 import psycopg2.extras
 import pandas as pd
+import os
 from os import environ
+import logging
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import geopandas as gpd
 from st_pages import Page, show_pages, add_page_title
+from boto3 import client
+from botocore.exceptions import NoCredentialsError
 
 
 WEEK_CONSTRAINT = datetime.now() - timedelta(days=7)
 MONTH_CONSTRAINT = datetime.now() - timedelta(days=30)
+DESTINATION_DIR = '/tmp/data'
 WEIGHTING = {
     'avg_magnitude': 0.3,
     'num_earthquakes': 0.2,
@@ -29,6 +34,18 @@ def get_connection():
                             user=environ['DB_USERNAME'],
                             password=environ['DB_PASSWORD'],
                             port=environ['DB_PORT'])
+
+
+def get_s3_client() -> client:
+    """Returns input s3 client"""
+    try:
+        s3_client = client('s3',
+                           aws_access_key_id=environ.get('ACCESS_KEY'),
+                           aws_secret_access_key=environ.get('SECRET_ACCESS_KEY'))
+        return s3_client
+    except NoCredentialsError:
+        logging.error("Error, no AWS credentials found")
+        return None
 
 
 def get_magnitude_map_data_last_7_days(conn: connection) -> list[tuple]:
@@ -147,11 +164,27 @@ def get_avg_magnitude_last_30_days(conn):
     return result
 
 
+def get_file_keys_from_bucket(s3, bucket_name: str) -> list[str]:
+    """Gets all file Key values from a bucket"""
+    bucket = s3.list_objects(Bucket=bucket_name)
+    return [file["Key"] for file in bucket["Contents"]]
+
+
+@st.cache_data
+def download_shapefiles(_bucket_name: str, _s3: client, _folder_path: str) -> None:
+    """Downloads shapefiles for US state mapping"""
+    file_keys = get_file_keys_from_bucket(_s3, _bucket_name)
+    for file_key in file_keys:
+        file_path = os.path.join(_folder_path, file_key)
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        _s3.download_file(_bucket_name, file_key, file_path)
+
+
 def get_state_risk_map() -> alt.Chart:
     """gets earthquake data and creates magnitude map visual"""
     conn = get_connection()
     states_gdf = gpd.read_file(
-        './cb_2023_us_state_500k/cb_2023_us_state_500k.shp')
+        '/tmp/data/cb_2023_us_state_500k.shp')
     ansi = pd.read_csv(
         'https://www2.census.gov/geo/docs/reference/state.txt', sep='|')
     ansi.columns = ['id', 'abbr', 'state', 'statens']
@@ -200,7 +233,6 @@ def create_home_page():
         f"The most recent significant earthquake was recorded in {recent_earthquake_loc.split("-")[1]} at {recent_earthquake_time} with a magnitude of {recent_earthquake_mag}.")
 
     with st.expander('Click here for more information on earthquake magnitudes'):
-        st.balloons()
         st.write(
             "Earthquake magnitude is essentially the size of the earthquake measured, the table below provides more information on how the impact of earthquakes changes as the magnitude increases:")
         create_magnitude_table()
@@ -217,6 +249,11 @@ def create_home_page():
         timeframe} is {avg_magnitude}""")
     st.altair_chart(create_magnitude_map(pd.DataFrame(chosen_data, columns=[
         'lon', 'lat', 'magnitude', 'depth'])))
+
+    s_client = get_s3_client()
+
+    download_shapefiles(environ['SHAPEFILE_BUCKET_NAME'],
+                        s_client, DESTINATION_DIR)
 
     st.subheader(
         "The map below shows the states of the US colour coded by the relative risk posed by earthquakes:")
