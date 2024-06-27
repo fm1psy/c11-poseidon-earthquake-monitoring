@@ -249,29 +249,7 @@ Stay safe and follow these guidelines until the shaking subsides.
 if __name__ == "__main__":
     import extract
     import transform
-    example_data = [{
-        "earthquake_id": "ak0247tc2ogk",
-        "alert": "green",
-        "status": "automatic",
-        "network": "ak",
-        "magtype": "ml",
-        "earthquake_type": "earthquake",
-        "magnitude": 6.0,
-        "lon": -2.964996,
-        "lat": 53.508624,
-        "depth": 0,
-        "time": '2024-06-24 12: 22: 22',
-        "felt": None,
-        "cdi": None,
-        "mmi": None,
-        "significance": 158,
-        "nst": None,
-        "dmin": None,
-        "gap": None,
-        "title": "M 3.2 - 88 km NW of Yakutat, Alaska"
-    }]
-    # extract_data = extract.extract_process()
-    # transform_data = transform.transform_process(extract_data)
-    # if transform_data:
-    #     sns_alert_system(transform_data)
-    sns_alert_system(example_data)
+    extract_data = extract.extract_process()
+    transform_data = transform.transform_process(extract_data)
+    if transform_data:
+        sns_alert_system(transform_data)

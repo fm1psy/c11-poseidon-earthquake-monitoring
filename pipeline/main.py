@@ -6,7 +6,7 @@ import logging
 from extract import extract_process
 from transform import transform_process
 from load import load_process
-
+from sns import 
 
 def run_pipeline():
     logging.basicConfig(level=logging.INFO,
@@ -25,6 +25,7 @@ def run_pipeline():
         logging.error(f'Error during transform: {e}')
         return
 
+    try 
     try:
         load_process(transformed_data)
         logging.info('Pipeline completed running')
