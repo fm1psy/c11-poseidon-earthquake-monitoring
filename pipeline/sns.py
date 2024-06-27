@@ -10,10 +10,6 @@ from haversine import haversine
 from psycopg2.extensions import connection, cursor
 import psycopg2.extras
 
-
-
-NOTIFICATION_RADIUS = 10
-
 load_dotenv()
 
 def get_sns_client():
@@ -58,13 +54,13 @@ def get_cursor(conn: connection) -> cursor:
         return None
 
 
-def calculate_distance(topic_coordinates: tuple, earthquake_coordinates: tuple) -> int | None:
+def calculate_distance(coordinate_1: tuple, coordinate_2: tuple) -> int | None:
     """
     Calculates the distance in km between 2 coordinates
     """
     try:
         return int(haversine(
-            topic_coordinates, earthquake_coordinates))
+            coordinate_1, coordinate_2))
     except (TypeError, ValueError) as e:
         logging.error(f"Error calculating distance: {e}")
         return None
@@ -96,7 +92,22 @@ def get_topic_detail(topic: dict, detail: str) -> str | None:
         return None
 
 
-def check_topic_range(eq_lon: str, eq_lat: str, topic: dict) -> bool:
+def get_notification_distance(magnitude: float) -> int | None:
+    """
+    Gets distance to notifications based on how strong the magnitude is.
+    """
+    if not isinstance(magnitude, (int, float)):
+        return None
+    if magnitude < 4:
+        return 50
+    if 4 <= magnitude < 5:
+        return 150
+    if magnitude >= 5:
+        return 200
+    return None
+
+
+def check_topic_range(eq_lon: str, eq_lat: str, topic: dict, magnitude: float) -> bool:
     """
     Checks to see if the topic location is within 10km of
     the most recent earthquake
@@ -110,7 +121,7 @@ def check_topic_range(eq_lon: str, eq_lat: str, topic: dict) -> bool:
         distance = calculate_distance(
             topic_coordinates, earthquake_coordinates)
 
-        return (distance is not None and distance <= NOTIFICATION_RADIUS)
+        return (distance is not None and distance <= get_notification_distance(magnitude))
 
     except Exception as e:
         logging.error(
@@ -128,7 +139,9 @@ def get_user_information(user: dict) -> dict:
             'email_address': user['email_address'],
             'phone_number': user['phone_number'],
             'topic_arn': user['topic_arn'],
-            'min_magnitude': user['min_magnitude']
+            'min_magnitude': user['min_magnitude'],
+            'lon': user['lon'],
+            'lat': user['lat']
         }
     except Exception as e:
         logging.error(
@@ -136,18 +149,20 @@ def get_user_information(user: dict) -> dict:
         return {}
 
 
-def find_related_topics(latest_earthquakes: list[dict], topics) -> list:
+def find_related_topics(earthquake: dict, topics) -> list:
     """
     Finds all topics which will be interested in the most recent
     earthquake
     """
     try:
         related_topics = []
-        for earthquakes in latest_earthquakes:
-            for topic in topics:
-                if earthquakes['magnitude'] >= topic['min_magnitude'] and \
-                    check_topic_range(earthquakes['lon'], earthquakes['lat'], topic):
-                    related_topics.append(topic)
+        for topic in topics:
+            lon = earthquake['lon']
+            lat = earthquake['lat']
+            magnitude = earthquake['magnitude']
+            if earthquake['magnitude'] >= topic['min_magnitude'] and \
+                    check_topic_range(lon, lat, topic, magnitude):
+                related_topics.append(topic)
         return related_topics
     except Exception as e:
         logging.error(
@@ -163,7 +178,7 @@ def get_subscribed_users(conn: connection, related_topics: list) -> list:
         with get_cursor(conn) as cur:
             for topic in related_topics:
                 query = """
-                SELECT uta.user_id, u.email_address, u.phone_number, t.topic_arn, t.min_magnitude
+                SELECT uta.user_id, u.email_address, u.phone_number, t.topic_arn, t.min_magnitude, t.lat, t.lon
                 FROM user_topic_assignments AS uta
                 JOIN users AS u ON u.user_id = uta.user_id
                 JOIN topics AS t ON uta.topic_id = t.topic_id
@@ -171,7 +186,9 @@ def get_subscribed_users(conn: connection, related_topics: list) -> list:
                 """
                 cur.execute(query, (topic['topic_id'],))
                 rows = cur.fetchall()
+
                 return [get_user_information(row) for row in rows]
+
     except Exception as e:
         logging.error(
             f"An unexpected error occurred getting subscribed users: {e}")
@@ -203,25 +220,46 @@ def sns_alert_system(earthquakes: list[dict]):
     conn = get_connection()
 
     topics = get_topics(conn)
-    related_topics = find_related_topics(earthquakes, topics)
-    subscribed_users = get_subscribed_users(conn, related_topics)
+    for earthquake in earthquakes:
+        related_topics = find_related_topics(earthquake, topics)
+        subscribed_users = get_subscribed_users(conn, related_topics)
+        if subscribed_users:
+            for user in subscribed_users:
+                magnitude = earthquake['magnitude']
+                eq_coordinates = (earthquake['lon'], earthquake['lat'])
+                topic_coordinates = (user['lon'], user['lat'])
+                title = earthquake['title'].split(' - ')[1]
+                distance = calculate_distance(topic_coordinates, eq_coordinates)
+                message = (
+f"""
+**EARTHQUAKE WARNING!**
 
-    for user in subscribed_users:
-        magnitude = user['min_magnitude']
-        message = (
-            f"Earthquake Alert! Magnitude {magnitude} or above "
-            "earthquake detected in your area"
-        )
-        subject = "Earthquake Alert"
-        send_message(
-            sns_client, user['topic_arn'], subject, message
-        )
+A magnitude {magnitude} earthquake has been detected within {distance}km of your area, {title}
+
+SAFETY TIPS:
+
+1. DROP, COVER, and HOLD ON: Drop to your hands and knees. Take cover under a sturdy table or desk, or cover your head and neck with your arms. Hold on until the shaking stops.
+
+2. STAY INDOORS: Remain inside; do not run outside while the building is shaking.
+
+3. AVOID WINDOWS AND HEAVY OBJECTS: Move away from windows, glass, and any objects that could fall, like bookcases or mirrors.
+
+4. IF OUTSIDE, FIND AN OPEN AREA: Move to a clear area away from buildings, trees, streetlights, and wires.
+
+5. IF IN A CAR, PULL OVER SAFELY: Pull over to a safe location and stay inside until the shaking stops.
+
+Stay safe and follow these guidelines until the shaking subsides. Be aware of potential aftershocks.
+"""
+                )
+                subject = "EARTHQUAKE WARNING"
+                send_message(
+                    sns_client, user['topic_arn'], subject, message
+                )
 
 
 if __name__ == "__main__":
     import extract
     import transform
-
     extract_data = extract.extract_process()
     transform_data = transform.transform_process(extract_data)
     if transform_data:

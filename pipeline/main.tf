@@ -67,7 +67,7 @@ resource "aws_lambda_function" "pipeline_lambda" {
     function_name = "poseidon-earthquake-pipeline"
     role = aws_iam_role.pipeline_lambda_role.arn
     package_type = "Image"
-    image_uri = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c11-poseidon-pipeline:latest" # TO FILL
+    image_uri = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c11-poseidon-pipeline:latest"
     architectures = ["x86_64"]
     timeout = 45
     environment {

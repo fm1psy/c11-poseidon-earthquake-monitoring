@@ -18,8 +18,8 @@ def get_s3_client() -> client:
     """Returns input s3 client"""
     try:
         s3_client = client('s3',
-                           aws_access_key_id=environ.get('ACCESS_KEY'),
-                           aws_secret_access_key=environ.get('SECRET_ACCESS_KEY'))
+                           aws_access_key_id=environ['AWS_ACCESS_KEY'],
+                           aws_secret_access_key=environ['AWS_SECRET_KEY'])
         return s3_client
     except NoCredentialsError:
         logging.error("Error, no AWS credentials found")
@@ -43,6 +43,7 @@ def get_s3_file(s3_client, bucket_name, file_key):
     try:
         obj = s3_client.get_object(Bucket=bucket_name, Key=file_key)
         return obj['Body'].read()
+
     except NoCredentialsError:
         st.error("AWS S3 credentials are not configured properly.")
         return None

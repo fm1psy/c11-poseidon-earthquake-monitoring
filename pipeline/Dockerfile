@@ -8,6 +8,7 @@ RUN pip install -r requirements.txt
 COPY extract.py .
 COPY transform.py .
 COPY load.py .
+COPY sns.py .
 COPY main.py .
 COPY handler.py .
 

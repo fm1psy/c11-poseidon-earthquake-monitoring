@@ -6,3 +6,6 @@ python-dotenv
 altair
 vega_datasets
 psycopg2-binary
+st-pages
+pandas
+geopandas
