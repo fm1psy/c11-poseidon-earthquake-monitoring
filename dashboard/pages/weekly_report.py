@@ -43,6 +43,7 @@ def get_s3_file(s3_client, bucket_name, file_key):
     try:
         obj = s3_client.get_object(Bucket=bucket_name, Key=file_key)
         return obj['Body'].read()
+
     except NoCredentialsError:
         st.error("AWS S3 credentials are not configured properly.")
         return None

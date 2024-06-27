@@ -43,17 +43,17 @@ def create_risk_state_map(state_grouping: gpd.GeoDataFrame,
 
     chart = alt.Chart(us_state_map).mark_geoshape(stroke='black').encode(
         color=alt.Color(
-            'risk_score:Q',
+            'relative_risk:Q',
             scale=alt.Scale(
-                domain=[state_grouping['risk_score'].min(
-                ), state_grouping['risk_score'].max()],
+                domain=[state_grouping['relative_risk'].min(
+                ), state_grouping['relative_risk'].max()],
                 range=['#FDFD96', '#FF0000']
             ),
             legend=alt.Legend(title="Risk Score")),
-        tooltip=['risk_score:Q']
+        tooltip=['relative_risk:Q']
     ).transform_lookup(
         lookup='id',
-        from_=alt.LookupData(state_grouping, 'id', ['risk_score'])
+        from_=alt.LookupData(state_grouping, 'id', ['relative_risk'])
     ).properties(
         width=1000,
         height=600
