@@ -25,10 +25,18 @@ variable "DB_PASSWORD" {
 }
 
 variable "DB_PORT" {
-  type = number
-  default = 5432
+  type = string
+  default = "5432"
 }
 
 variable "DB_HOST" {
+  type = string
+}
+
+variable "BUCKET_NAME" {
+  type = string
+}
+
+variable "SHAPEFILE_BUCKET_NAME" {
   type = string
 }
