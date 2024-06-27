@@ -56,13 +56,13 @@ def get_filter_queries(earthquake_filters: dict[str]) -> list[str]:
     """Return a list of WHERE command strings that can be added onto a postgreSQL query.
     """
     res = []
+    logging.info(f"""Filters used: {list(earthquake_filters.items())}""")
     status = earthquake_filters[STATUS_FILTER_KEY]
     network = earthquake_filters[NETWORK_FILTER_KEY]
     alert = earthquake_filters[ALERT_FILTER_KEY]
     magtype = earthquake_filters[MAG_TYPE_FILTER_KEY]
     event = earthquake_filters[EVENT_FILTER_KEY]
     min_magnitude = earthquake_filters[MIN_MAGNITUDE_FILTER_KEY]
-    logging.info(status)
     if status not in FILTER_MISINPUTS:
         res.append(f"s.status = '{status}'")
     if network not in FILTER_MISINPUTS:
@@ -145,7 +145,6 @@ def get_earthquake_data(earthquake_filters: dict[str]) -> list[dict]:
     LEFT JOIN networks AS n USING(network_id)
     LEFT JOIN alerts AS a USING(alert_id)
     """
-    print(earthquake_filters.values())
     if any(value is not None for value in earthquake_filters.values()):
         query_filter_commands = get_filter_queries(earthquake_filters)
         search_query += " AND ".join(query_filter_commands)
@@ -159,6 +158,7 @@ def get_earthquake_data(earthquake_filters: dict[str]) -> list[dict]:
     country = earthquake_filters[COUNTRY_FILTER_KEY]
     fetched_earthquakes = filter_by_location(
         fetched_earthquakes, country, continent)
+    logging.info("Finished retrieving earthquake data.")
     return fetched_earthquakes
 
 
@@ -184,12 +184,15 @@ def get_earthquakes() -> Response:
         }
 
         earthquakes = get_earthquake_data(user_filters)
+        logging.info(f"{len(earthquakes)} earthquake events were retrieved.")
         return jsonify(earthquakes), 200
     except Exception as e:  # pylint: disable=broad-exception-caught
+        logging.error(str(e))
         return jsonify({"error": str(e)}), 400
 
 
 if __name__ == "__main__":
     load_dotenv()
-    logging.basicConfig(encoding='utf-8', level=logging.ERROR)
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    logging.basicConfig(format="%(asctime)s %(message)s", datefmt="%d/%m/%Y %H:%M:%S",
+                        encoding='utf-8', level=logging.INFO)
+    app.run(host="0.0.0.0", port=5000)
