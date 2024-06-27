@@ -1,4 +1,4 @@
-# 📊 Database
+# 🔎 Database
 This folder is responsible for creating a database. It includes a SQL script which creates the tables for a PostgreSQL database based off the ERD laid our in the main README file. 
 ## 📁 Files
 | File Name | Description |
