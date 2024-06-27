@@ -44,6 +44,15 @@ def download_shapefiles(bucket_name: str, s3: client, folder_path: str) -> None:
         s3.download_file(bucket_name, file_key, file_path)
 
 
+def monday_week_date(current_date: date) -> str:
+    weekday = current_date.weekday()
+    if weekday == 0:
+        return current_date.strftime("%d-%m-%Y")
+
+    monday = current_date - timedelta(weekday)
+    return monday.strftime("%d-%m-%Y")
+
+
 def convert_altair_chart_to_html_embed(chart: alt.Chart) -> str:
     """Converts an Altair chart to a string representation."""
 
@@ -72,12 +81,7 @@ def convert_html_to_pdf(source_html) -> BytesIO:
 
 def get_prefix(current_date: date) -> str:
     """creates object prefix for s3 bucket"""
-    weekday = current_date.weekday()
-    if weekday == 0:
-        return f"wc-{current_date.strftime("%d-%m-%Y")}/"
-
-    monday = current_date - timedelta(weekday)
-    return f"wc-{monday.strftime("%d-%m-%Y")}/"
+    return f"wc-{monday_week_date(current_date)}/"
 
 
 def upload_historical_readings(s3: client, bucket_name: str, prefix: str,
@@ -94,6 +98,7 @@ def handler(event=None, context=None):
 
     download_shapefiles(ENV['SHAPEFILE_BUCKET_NAME'],
                         s_client, DESTINATION_DIR)
+    logging.info(f"Shapefiles downloaded from {ENV['SHAPEFILE_BUCKET_NAME']}")
 
     sig_chart = get_significance_bar()
     mag_map = get_magnitude_map()
@@ -101,6 +106,7 @@ def handler(event=None, context=None):
 
     mag_html = convert_altair_chart_to_html_embed(mag_map)
     state_html = convert_altair_chart_to_html_embed(state_map)
+    logging.info("Altair charts converted to html")
 
     html_report = f"""
         <!DOCTYPE html>
@@ -115,20 +121,21 @@ def handler(event=None, context=None):
             <h3>Introduction</h3>
             <p>This report provides an overview of the recent seismic activity globally, with a particular focus on USA. It includes details about the magnitude, location, depth, and potential impact of detected earthquakes. The data is sourced from the United States Geological Survey (USGS).</p>
             <h3>Recent Seismic Activity</h3>
-            <p>From June 1, 2024,to June 24, 2024, the seismic monitoring network recorded a total of 15 significant earthquakes. The following visual summarizes the key details of these events.</p>
+            <p>From June 1, 2024,to {CURRENT_DATE}, the seismic monitoring network recorded a total of 15 significant earthquakes. The following visual summarizes the key details of these events.</p>
             <img style="width: 500; height: 300" src="{mag_html}">
             <h3>What's happening in USA?</h3>
             <img style="width: 250; height: 150" src="{state_html}">
         </body>
     """
     file_data = convert_html_to_pdf(html_report)
+    logging.info(f"weekly report converted from html to PDF")
     prefix = get_prefix(CURRENT_DATE)
     file_name = f"{CURRENT_DATE}.pdf"
     upload_historical_readings(
         s_client, ENV['STORAGE_BUCKET_NAME'], prefix, file_name, file_data)
-
-    return {"success": "complete"}
+    logging.info(f"Weekly PDF report uploaded to {ENV['STORAGE_BUCKET_NAME']}")
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     handler()
