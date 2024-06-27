@@ -17,7 +17,6 @@ from boto3 import client
 from botocore.exceptions import NoCredentialsError
 
 
-
 WEEK_CONSTRAINT = datetime.now() - timedelta(days=7)
 MONTH_CONSTRAINT = datetime.now() - timedelta(days=30)
 DESTINATION_DIR = '/tmp/data'
@@ -42,8 +41,8 @@ def get_s3_client() -> client:
     """Returns input s3 client"""
     try:
         s3_client = client('s3',
-                           aws_access_key_id=environ.get('ACCESS_KEY'),
-                           aws_secret_access_key=environ.get('SECRET_ACCESS_KEY'))
+                           aws_access_key_id=environ.get('AWS_ACCESS_KEY'),
+                           aws_secret_access_key=environ.get('AWS_SECRET_KEY'))
         return s3_client
     except NoCredentialsError:
         logging.error("Error, no AWS credentials found")

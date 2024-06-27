@@ -51,6 +51,14 @@ resource "aws_ecs_task_definition" "dashboard_task" {
         {
           name = "SHAPEFILE_BUCKET_NAME"
           value = var.SHAPEFILE_BUCKET_NAME
+        },
+        {
+          name = "AWS_ACCESS_KEY"
+          value = var.AWS_ACCESS_KEY
+        },
+        {
+          name = "AWS_SECRET_KEY"
+          value = var.AWS_SECRET_KEY
         }
 
       ]
