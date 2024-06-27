@@ -36,9 +36,6 @@ All the scripts only require basic commands to be executed. Different commands a
 # Python running locally
 streamlit run main.py
 
-# Bash
-sh "script.sh"
-
 # Terraform
 terraform init
 terraform apply
