@@ -28,9 +28,10 @@ def run_pipeline():
 
         try:
             sns_alert_system(transformed_data)
+
         except Exception as e:
             logging.error(f'Error when sending SNS alerts: {e}')
-            return
+        
         try:
             load_process(transformed_data)
             logging.info('Pipeline completed running')
