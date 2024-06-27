@@ -492,12 +492,37 @@ def example_transformed_data(get_epoch_time):
 
 
 @pytest.fixture
+def example_single_earthquake(get_epoch_time):
+    return {
+        "earthquake_id": "ak0247tc2ogk",
+        "alert": "green",
+        "status": "automatic",
+        "network": "ak",
+        "magtype": "ml",
+        "earthquake_type": "earthquake",
+        "magnitude": 3.2,
+        "lon": -140.7726,
+        "lat": 60.1438,
+        "depth": 0,
+        "time": get_epoch_time,
+        "felt": None,
+        "cdi": None,
+        "mmi": None,
+        "significance": 158,
+        "nst": None,
+        "dmin": None,
+        "gap": None,
+        "title": "M 3.2 - 88 km NW of Yakutat, Alaska"
+    }
+
+
+@pytest.fixture
 def example_id_tables():
     return {"green": 1}, {"automatic": 1, "reviewed": 2}, {"ak": 1}, {"ml": 1}, {"earthquake": 1}
 
 @pytest.fixture
 def liverpool_earthquake():
-    return [{
+    return {
         "earthquake_id": "ak0247tc2ogk",
         "alert": "green",
         "status": "automatic",
@@ -517,7 +542,7 @@ def liverpool_earthquake():
         "dmin": None,
         "gap": None,
         "title": "M 3.2 - 88 km NW of Yakutat, Alaska"
-    }]
+    }
 
 
 
@@ -551,7 +576,9 @@ def example_user():
         'email_address': 'trainee.joe.lam@sigmalabs.co.uk',
         'phone_number': '447482569206',
         'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test_email',
-        'min_magnitude': 4.5
+        'min_magnitude': 4.5,
+        'lon': -2.964996, 
+        'lat': 53.407624
     }
 
 
@@ -562,14 +589,18 @@ def example_users():
         'email_address': 'trainee.joe.lam@sigmalabs.co.uk',
         'phone_number': '447482569206',
         'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test_email',
-        'min_magnitude': 4.5
+        'min_magnitude': 4.5,
+        'lon': -2.964996, 
+        'lat': 53.407624
         },
         {
         'user_id': 21,
         'email_address': 'trainee.ella.jepsen@sigmalabs.co.uk',
         'phone_number': '07552224539',
         'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test',
-        'min_magnitude': 3
+        'min_magnitude': 3,
+        'lon': -2.964996, 
+        'lat': 53.407624
         }]
 
 

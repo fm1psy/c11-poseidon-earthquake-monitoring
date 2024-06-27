@@ -363,4 +363,5 @@ def transform_process(extracted_data: list[dict]) -> list[dict]:
 if __name__ == "__main__":
     import extract
     extract_data = extract.extract_process()
-    print(transform_process(extract_data))
+    for i in transform_process(extract_data):
+        print(i)
