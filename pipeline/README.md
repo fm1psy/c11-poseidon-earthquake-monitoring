@@ -6,6 +6,7 @@ This folder is responsible for the pipeline logic used to extract, transform and
 | **extract.py** | Contains the code that fetches all earthquake data from the past hour, filters the data for earthquakes that happened in the last minute and returns it. |
 | **transform.py** | Once the data has been fetched, all unnecessary data is removed and validated. By the end of the transform process, only data with valid values is kept. | 
 | **load.py** | This file is responsible for loading data into the database. This includes both earthquake data and new data that wasn't previously in the database such as earthquake monitoring stations. |
+| **sns.py** | This runs alongside the pipeline so that all new earthquakes are passed through the notification system. Users who have subscribed to a topic within the radius of a new earthquake will be sent a text and email warning |
 | **main.py** | This file contains the entire pipeline process, i.e. running extract, transform and load with the correct arguments. | 
 | **handler.py** | Provides the same service as 'main.py' with the only difference being the structure of the file - this file is going to be used as the Lambda function. |
 | **test_*.py** | Files starting with 'test_' are used for testing each step of the pipeline. |
