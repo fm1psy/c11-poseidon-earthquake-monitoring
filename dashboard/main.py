@@ -65,13 +65,13 @@ def get_usa_only_earthquakes(conn: connection) -> list[tuple]:
     with conn.cursor() as cur:
         cur.execute("""
         SELECT lon,lat,magnitude, depth FROM earthquakes
-            WHERE time >= %s AND
+            WHERE
             (
                 (lat BETWEEN %s AND %s AND lon BETWEEN %s AND %s) OR
                 (lat BETWEEN %s AND %s AND lon BETWEEN %s AND %s) OR
                 (lat BETWEEN %s AND %s AND lon BETWEEN %s AND %s)
                     ) """,
-                    (WEEK_CONSTRAINT, cont_us_lat[0], cont_us_lat[1],
+                    (cont_us_lat[0], cont_us_lat[1],
                      cont_us_lon[0], cont_us_lon[1],
                      hawaii_lat[0], hawaii_lat[1],
                      hawaii_lon[0], hawaii_lon[1],
@@ -166,6 +166,12 @@ def get_state_risk_map() -> alt.Chart:
     return risk_map
 
 
+def create_magnitude_table():
+    data = {'Magnitude': ['0 - 2.9', '3.0 - 3.9', '4.0 - 4.9', '5.0 - 5.9',
+                          '6.0 - 6.9', '7.0 - 7.9', '8.0 +'], 'Category': ['micro', 'minor', 'light', 'moderate', 'strong', 'major', 'great'], 'Impact': ['Recorded on instruments but so small that they are not usually felt by people', 'Felt by some people but minimal damage caused', 'Small amounts of damage caused, felt by majority of people in the area', 'Weaker structures face some damage', 'Moderate damage to structures', 'Serious damage to large areas and potential loss of life', 'Severe and serious damage and significant loss of life'], 'Average number occuring per year': ['Over 100,000', '12,000 - 100,000', '2,000 - 12,000', '200 - 2,000', '20 - 200', '3 - 200', 'fewer than 3']}
+    return st.table(pd.DataFrame.from_dict(data, orient='columns'))
+
+
 def create_home_page():
     """creates the home page"""
     st.set_page_config(layout="wide")
@@ -174,16 +180,24 @@ def create_home_page():
             Page("main.py", "Home", "🏠"),
             Page("pages/notifications.py",
                  "Earthquake Notifications", ":rotating_light:"),
+            Page("pages/weekly_report.py",
+                 "Weekly PDF Report", ":page_facing_up:")
         ]
     )
-    st.title("Earthquake Dashboard")
+    st.title("Earthquake Dashboard :earth_americas:")
 
     load_dotenv()
     conn = get_connection()
     recent_earthquake_loc, recent_earthquake_time, recent_earthquake_mag = get_most_recent_earthquake_above_mag_5(
         conn)
     st.subheader(
-        f"The most recent significant earthquake was recorded in {recent_earthquake_loc} at {recent_earthquake_time} with a magnitude of {recent_earthquake_mag}.")
+        f"The most recent significant earthquake was recorded in {recent_earthquake_loc.split("-")[1]} at {recent_earthquake_time} with a magnitude of {recent_earthquake_mag}.")
+
+    with st.expander('Click here for more information on earthquake magnitudes'):
+        st.balloons()
+        st.write(
+            "Earthquake magnitude is essentially the size of the earthquake measured, the table below provides more information on how the impact of earthquakes changes as the magnitude increases:")
+        create_magnitude_table()
 
     timeframe = st.radio("Select timeframe:", [
         "Last 7 days", 'Last 30 days'])
@@ -201,6 +215,8 @@ def create_home_page():
     st.subheader(
         "The map below shows the states of the US colour coded by the risk posed by earthquakes:")
     st.altair_chart(get_state_risk_map())
+
+    st.write("Risk is calculated by ")
 
 
 if __name__ == "__main__":
