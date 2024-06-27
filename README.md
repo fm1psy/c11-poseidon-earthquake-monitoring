@@ -6,11 +6,15 @@ This project will monitor the United States Geological Survey (USGS) earthquake 
 
 | Folder Name | Description |
 |---|---|
-| **api** | An API to allow developers to query earthquake data. |
-| **database** | A database to store all the real-time earthquake data. |
-| **diagrams**  | Images that map out the project for easy understanding. |
 | **.github** | Essential files for your GitHub repository. |
-| **pipeline**  | Code that brings data from the QuakeML API to the database. |
+| **api** | An API to allow developers to query earthquake data. |
+| **dashboard**  | A file which contains scipts to host the dashboard, pdf reports and earthquake alert sign up form. |
+| **database** | A PostgreSQL database to store all the real-time earthquake data. |
+| **diagrams**  | Images that map out the project for easy understanding. |
+| **pipeline**  | Code that brings data from the QuakeML API to the database. Also includes script for SNS warnings in the event of an earthquake. |
+| **weekly-report**  | A summary report which contains information gathered on earthquakes in the past week. |
+
+
 
 ## 📐 Architecture Design
 
@@ -21,7 +25,7 @@ For this project, we have designed it with the intention of hosting everything o
 
 ### 📐 Architecture Diagram
 
-![Architecture Diagram](https://github.com/fm1psy/c11-poseidon-earthquake-monitoring/blob/main/diagrams/architecture_diagram.png)
+![Architecture Diagram](diagrams/architecture_diagram.png)
 
 ### ✏️ Design Decisions
 
@@ -33,9 +37,10 @@ For a visual representation of the database schema and details on the design dec
 
 The provided Entity-Relationship Diagram (ERD) illustrates a database schema designed for tracking earthquake data. The schema follows the principles of Third Normal Form (3NF). There is a main earthquake table that captures data specific to each earthquake event. Additionally, lookup tables are included for categories such as status, alerts and networks.
 
-![ERD Diagram](https://github.com/fm1psy/c11-poseidon-earthquake-monitoring/blob/main/diagrams/erd_diagram.png)
+![ERD Diagram](diagrams/erd_diagram.png)
 
 ### 💡 Design Decisions
+
 
 
 ## ✅ Getting Setup
@@ -61,32 +66,6 @@ The following languages/softwares are required for this project. Things assigned
     python3 -m venv .venv
     source .venv/bin/activate
     pip install -r requirements.txt
-    ```
-
-### 🌱 Database Seeding with .env configuration
-
-1. **Create an `.env` file in `database` folder**
-
-2. **Edit the .env file to provide the following database connection details**
-
-| ✨ KEY | Placeholder |
-|---|---|
-|  DB_HOST | _localhost_ |
-|  DB_PORT  |  _3306_ |
-|  DB_PASSWORD  |  *your_username*  |
-|  DB_USER  |  *your_password*  |
-|  DB_NAME  |  *your_db_name*  |
-
-
-> [!IMPORTANT]  
-> To be able to run these scripts the following details must be provided in the `.env` file and should NOT be shared.
-
-3. **Run these commands (TO BE CONFIRMED)**:
-    ```bash
-    cd database
-    source .env
-    psql -h $DB_HOST -p $DB_PORT -d $DB_NAME -U $DB_USER -W $DB_PASSWORD -f schema.sql
-    python3 seeding.py
     ```
 
 ## 📗 Authors
