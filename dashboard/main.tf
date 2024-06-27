@@ -21,7 +21,7 @@ resource "aws_ecs_task_definition" "dashboard_task" {
   container_definitions = jsonencode([
     {
       name      = "poseidon-earthquake-dashboard-task"
-      image     = "" # TO FILL
+      image     = "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c11-poseidon-dashboard:latest"
       essential = true
       environment = [
         {
@@ -43,7 +43,16 @@ resource "aws_ecs_task_definition" "dashboard_task" {
         {
             name = "DB_PASSWORD"
             value = var.DB_PASSWORD
+        },
+        {
+          name = "BUCKET_NAME"
+          value = var.BUCKET_NAME
+        },
+        {
+          name = "SHAPEFILE_BUCKET_NAME"
+          value = var.SHAPEFILE_BUCKET_NAME
         }
+
       ]
       portMappings = [
         {
@@ -94,7 +103,7 @@ resource "aws_security_group" "dashboard_sg" {
 # 3 Dashboard Service
 resource "aws_ecs_service" "dashboard_service" {
   name            = "earthquake-dashboard-service"
-  cluster         = data.aws_ecs_cluster.c11-ecs-cluster.id
+  cluster         = data.aws_ecs_cluster.c11_ecs_cluster.id
   task_definition = aws_ecs_task_definition.dashboard_task.arn
   desired_count   = 1
   launch_type     = "FARGATE"
