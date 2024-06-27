@@ -92,6 +92,8 @@ def get_topic_detail(topic: dict, detail: str) -> str | None:
         return None
 
 def get_notification_distance(magnitude):
+    if not isinstance(magnitude, (int, float)):
+        return None
     if 4 > magnitude:
         return 50
     if 5 > magnitude > 4:
@@ -144,7 +146,7 @@ def get_user_information(user: dict) -> dict:
 
 def find_related_topics(earthquake: dict, topics) -> list:
     """
-    Finds all topics which wlil be interested in the most recent
+    Finds all topics which will be interested in the most recent
     earthquake
     """
     try:

@@ -196,15 +196,15 @@ def test_get_topic_detail_errors(topic, detail, expected_error, caplog):
 
 
 def test_check_topic_in_range(liverpool_earthquake, example_topic):
-    lon = liverpool_earthquake[0]['lon']
-    lat = liverpool_earthquake[0]['lat']
-    assert check_topic_range(lon, lat, example_topic) == True
+    lon = liverpool_earthquake['lon']
+    lat = liverpool_earthquake['lat']
+    assert check_topic_range(lon, lat, example_topic, 5.6) == True
 
 
-def test_check_topic_not_in_range(example_transformed_data, example_topic):
-    lon = example_transformed_data[0]['lon']
-    lat = example_transformed_data[0]['lat']
-    assert check_topic_range(lon, lat, example_topic) == False
+def test_check_topic_not_in_range(example_single_earthquake, example_topic):
+    lon = example_single_earthquake['lon']
+    lat = example_single_earthquake['lat']
+    assert check_topic_range(lon, lat, example_topic, 8) == False
 
 
 def test_check_topic_in_range_error(example_topic, caplog):
@@ -239,11 +239,10 @@ def test_get_subscribed_users(example_users, example_topics):
     conn.cursor.return_value.__enter__.return_value = cursor
     cursor.execute.return_value = example_users
     cursor.fetchall.return_value = example_users
-    assert get_subscribed_users(conn, example_topics) == [{'user_id': 22, 'email_address': 'trainee.joe.lam@sigmalabs.co.uk', 'phone_number': '447482569206', 'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test_email', 'min_magnitude': 4.5}, {
-        'user_id': 21, 'email_address': 'trainee.ella.jepsen@sigmalabs.co.uk', 'phone_number': '07552224539', 'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test', 'min_magnitude': 3}]
+    assert get_subscribed_users(conn, example_topics) == [{'user_id': 22, 'email_address': 'trainee.joe.lam@sigmalabs.co.uk', 'phone_number': '447482569206', 'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test_email', 'min_magnitude': 4.5, 'lon': -2.964996, 'lat': 53.407624}, {
+        'user_id': 21, 'email_address': 'trainee.ella.jepsen@sigmalabs.co.uk', 'phone_number': '07552224539', 'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test', 'min_magnitude': 3, 'lon': -2.964996, 'lat': 53.407624}]
 
-
-def test_get_subscribed_users_error(example_users):
+def test_get_subscribed_users_error(example_users, caplog):
     conn = MagicMock()
     cursor = MagicMock()
     conn.cursor.return_value.__enter__.return_value = cursor
