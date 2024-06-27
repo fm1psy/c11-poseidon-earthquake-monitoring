@@ -1,8 +1,8 @@
-# c11-poseidon-earthquake-monitoring
+# 🌎 c11-poseidon-earthquake-monitoring
 
 This project will monitor the United States Geological Survey (USGS) earthquake data feeds, continually extracting and storing data. This data will be used to provide interactive dashboards  and subscribable alerts, so that users can make appropriate preparations/decisions with full knowledge of earthquake risks.
 
-## Folders
+## 🗄️ Folders
 
 | Folder Name | Description |
 |---|---|
@@ -12,34 +12,44 @@ This project will monitor the United States Geological Survey (USGS) earthquake 
 | **.github** | Essential files for your GitHub repository. |
 | **pipeline**  | Code that brings data from the QuakeML API to the database. |
 
-## Architecture Design
+## 📐 Architecture Design
 
 For a visual representation of the project architecture and details on the design decisions, please refer to this section.
 
-### Architecture Diagram
+### ☁️ Cloud Resources
+For this project, we have designed it with the intention of hosting everything on the cloud in order to automate it. The python scripts can still be ran locally but the terraform scripts have been included within the repository if you desire to host this system on the cloud as well. The cloud service that has been used is **AWS**.
+
+### 📐 Architecture Diagram
 
 ![Architecture Diagram](https://github.com/fm1psy/c11-poseidon-earthquake-monitoring/blob/main/diagrams/architecture_diagram.png)
 
-### Design Decisions
+### ✏️ Design Decisions
 
-## Database Design
+## 📏 Database Design
 
 For a visual representation of the database schema and details on the design decisions, please refer to this section.
 
-### Entity-Relationship Diagram (ERD)
+### 🪧 Entity-Relationship Diagram (ERD)
 
 The provided Entity-Relationship Diagram (ERD) illustrates a database schema designed for tracking earthquake data. The schema follows the principles of Third Normal Form (3NF). There is a main earthquake table that captures data specific to each earthquake event. Additionally, lookup tables are included for categories such as status, alerts and networks.
 
 ![ERD Diagram](https://github.com/fm1psy/c11-poseidon-earthquake-monitoring/blob/main/diagrams/erd_diagram.png)
 
-### Design Decisions
+### 💡 Design Decisions
 
 
-## Getting Setup
+## ✅ Getting Setup
 
 The sections below detail all the instructions to get this project running.
 
-### Dependencies
+### 💿 Installations
+The following languages/softwares are required for this project. Things assigned as optional are only required if you desire to host this system on the cloud.
+- Python
+- Bash
+- Terraform (Optional)
+- Docker (Optional)
+
+### ❗️ Dependencies
 
 1. **Clone the repository**:
     ```bash
@@ -53,7 +63,7 @@ The sections below detail all the instructions to get this project running.
     pip install -r requirements.txt
     ```
 
-### Database Seeding with .env configuration
+### 🌱 Database Seeding with .env configuration
 
 1. **Create an `.env` file in `database` folder**
 
@@ -79,7 +89,7 @@ The sections below detail all the instructions to get this project running.
     python3 seeding.py
     ```
 
-## Authors
+## 📗 Authors
 
 | Name | Github Profile |
 |---|---|
@@ -89,13 +99,11 @@ The sections below detail all the instructions to get this project running.
 | **Umar Haider** | **[laUmar123](https://github.com/laUmar123)** |
 | **Will Banks** | **[WillBanks1](https://github.com/WillBanks1)** |
 
-## Version History
+## 📚 Version History
+- 1.0
+  - Initial release
 
-| Version | Description |
-|---|---|
-| 1.0 | Initial Release |
+## © License
 
-## License
-
-## Acknowledgements
+## ❤️ Acknowledgements
 
