@@ -28,6 +28,7 @@ WEIGHTING = {
 }
 
 
+@st.cache_resource
 def get_connection():
     """gets connection to the database"""
     return psycopg2.connect(host=environ['DB_HOST'],
@@ -37,21 +38,10 @@ def get_connection():
                             port=environ['DB_PORT'])
 
 
-def get_s3_client() -> client:
-    """Returns input s3 client"""
-    try:
-        s3_client = client('s3',
-                           aws_access_key_id=environ.get('AWS_ACCESS_KEY'),
-                           aws_secret_access_key=environ.get('AWS_SECRET_KEY'))
-        return s3_client
-    except NoCredentialsError:
-        logging.error("Error, no AWS credentials found")
-        return None
-
-
-def get_magnitude_map_data_last_7_days(conn: connection) -> list[tuple]:
+@st.cache_data(ttl="1h")
+def get_magnitude_map_data_last_7_days(_conn: connection) -> list[tuple]:
     """get last 7 days earthquake data from db"""
-    with conn.cursor() as cur:
+    with _conn.cursor() as cur:
         cur.execute("""
         SELECT lon,lat,magnitude,depth FROM earthquakes
         WHERE time >= %s; """, (WEEK_CONSTRAINT,))
@@ -60,9 +50,10 @@ def get_magnitude_map_data_last_7_days(conn: connection) -> list[tuple]:
     return result
 
 
-def get_magnitude_map_data_last_30_days(conn: connection) -> list[tuple]:
+@st.cache_data(ttl="1h")
+def get_magnitude_map_data_last_30_days(_conn: connection) -> list[tuple]:
     """get last 30 days earthquake data from db"""
-    with conn.cursor() as cur:
+    with _conn.cursor() as cur:
         cur.execute("""
         SELECT lon,lat,magnitude,depth FROM earthquakes
         WHERE time >= %s; """, (MONTH_CONSTRAINT,))
@@ -71,7 +62,8 @@ def get_magnitude_map_data_last_30_days(conn: connection) -> list[tuple]:
     return result
 
 
-def get_usa_only_earthquakes(conn: connection) -> list[tuple]:
+@st.cache_data(ttl="1h")
+def get_usa_only_earthquakes(_conn: connection) -> list[tuple]:
     """ Get all earthquakes within the us"""
     cont_us_lat = [24.396308, 49.384358]
     cont_us_lon = [-125.000000, -66.934570]
@@ -80,7 +72,7 @@ def get_usa_only_earthquakes(conn: connection) -> list[tuple]:
     alaska_lat = [51.209712, 71.538800]
     alaska_lon = [-179.148909, -129.979506]
 
-    with conn.cursor() as cur:
+    with _conn.cursor() as cur:
         cur.execute("""
         SELECT lon,lat,magnitude, depth FROM earthquakes
             WHERE
@@ -139,9 +131,10 @@ def convert_to_dataframe(earthquake_data: list[tuple], column_headers: list[str]
     return pd.DataFrame(earthquake_data, columns=column_headers)
 
 
-def get_most_recent_earthquake_above_mag_6(conn):
+@st.cache_data(ttl="1h")
+def get_most_recent_earthquake_above_mag_6(_conn):
     """returns the most recent earthquake in the database that had a magnitude of 6 or more"""
-    with conn.cursor() as cur:
+    with _conn.cursor() as cur:
         cur.execute(
             """select title, time, magnitude from earthquakes 
                 where magnitude >= 6 order by time DESC limit 1; """)
@@ -149,47 +142,33 @@ def get_most_recent_earthquake_above_mag_6(conn):
     return result
 
 
-def get_avg_magnitude_last_7_days(conn):
+@st.cache_data(ttl="1h")
+def get_avg_magnitude_last_7_days(_conn):
     """returns the average magnitude of all earthquakes from the last 7 days"""
-    with conn.cursor() as cur:
+    with _conn.cursor() as cur:
         cur.execute("""
         SELECT AVG(magnitude) FROM earthquakes
         WHERE time >= %s; """, (WEEK_CONSTRAINT,))
-        result = cur.fetchone()
+        result = cur.fetchone()[0]
     return result
 
 
-def get_avg_magnitude_last_30_days(conn):
+@st.cache_data(ttl="1h")
+def get_avg_magnitude_last_30_days(_conn):
     """returns the average magnitude of all earthquakes from the last 30 days"""
-    with conn.cursor() as cur:
+    with _conn.cursor() as cur:
         cur.execute("""
         SELECT AVG(magnitude) FROM earthquakes
         WHERE time >= %s; """, (MONTH_CONSTRAINT,))
-        result = cur.fetchone()
+        result = cur.fetchone()[0]
     return result
-
-
-def get_file_keys_from_bucket(s3, bucket_name: str) -> list[str]:
-    """Gets all file Key values from a bucket"""
-    bucket = s3.list_objects(Bucket=bucket_name)
-    return [file["Key"] for file in bucket["Contents"]]
-
-
-@st.cache_data
-def download_shapefiles(_bucket_name: str, _s3: client, _folder_path: str) -> None:
-    """Downloads shapefiles for US state mapping"""
-    file_keys = get_file_keys_from_bucket(_s3, _bucket_name)
-    for file_key in file_keys:
-        file_path = os.path.join(_folder_path, file_key)
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        _s3.download_file(_bucket_name, file_key, file_path)
 
 
 def get_state_risk_map() -> alt.Chart:
     """gets earthquake data and creates magnitude map visual"""
     conn = get_connection()
     states_gdf = gpd.read_file(
-        '/tmp/data/cb_2023_us_state_500k.shp')
+        'cb_2023_us_state_500k.shp')
     ansi = pd.read_csv(
         'https://www2.census.gov/geo/docs/reference/state.txt', sep='|')
     ansi.columns = ['id', 'abbr', 'state', 'statens']
@@ -272,10 +251,10 @@ def create_home_page():
     st.altair_chart(create_magnitude_map(pd.DataFrame(chosen_data, columns=[
         'lon', 'lat', 'magnitude', 'depth'])))
 
-    s_client = get_s3_client()
+    # s_client = get_s3_client()
 
-    download_shapefiles(environ['SHAPEFILE_BUCKET_NAME'],
-                        s_client, DESTINATION_DIR)
+    # download_shapefiles(environ['SHAPEFILE_BUCKET_NAME'],
+    # s_client, DESTINATION_DIR)
 
     st.subheader(
         "The map below shows the states of the US colour coded by the relative risk posed by earthquakes:")

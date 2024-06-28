@@ -49,7 +49,8 @@ def create_risk_state_map(state_grouping: gpd.GeoDataFrame,
                 ), state_grouping['relative_risk'].max()],
                 range=['#FDFD96', '#FF0000']
             ),
-            legend=alt.Legend(title="Risk Score")),
+            legend=alt.Legend(title="Relative Risk",
+                              labelExpr='')),
         tooltip=['relative_risk:Q']
     ).transform_lookup(
         lookup='id',
