@@ -182,12 +182,11 @@ def get_earthquakes() -> Response:
             CONTINENT_FILTER_KEY: request.args.get("continent"),
             COUNTRY_FILTER_KEY: request.args.get("country")
         }
-
         earthquakes = get_earthquake_data(user_filters)
         logging.info(f"{len(earthquakes)} earthquake events were retrieved.")
         return jsonify(earthquakes), 200
     except Exception as e:  # pylint: disable=broad-exception-caught
-        logging.error(str(e))
+        logging.error(e)
         return jsonify({"error": str(e)}), 400
 
 
