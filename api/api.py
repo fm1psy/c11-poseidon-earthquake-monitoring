@@ -104,7 +104,7 @@ def filter_by_continent(fetched_data, continent: str) -> list[dict]:
             if continent_code == continent_filter_code:
                 res.append(row)
         except Exception as e:  # pylint: disable=broad-exception-caught
-            logging.error(e)
+            logging.error("Error appending data row (continent): %s", e)
     return res
 
 
@@ -118,7 +118,7 @@ def filter_by_country(fetched_data, country: str) -> list[dict]:
             if location["country"] == country:
                 res.append(row)
         except Exception as e:  # pylint: disable=broad-exception-caught
-            logging.error(e)
+            logging.error("Error appending data row (country): %s", e)
     return res
 
 
