@@ -20,7 +20,7 @@ All greyed out states have no recorded earthquakes.
 
 An example is illustrated below:
 
-![Example State Map Visual](link_placeholder)
+![Example State Map Visual](https://github.com/fm1psy/c11-poseidon-earthquake-monitoring/blob/main/diagrams/us_state_map.png)
 
 ### Key Files
 
@@ -28,7 +28,7 @@ US State Shapefile: https://www.census.gov/geographies/mapping-files/time-series
 
 ### Assumptions
 
-To determine the risk score associated with living in a US state susceptible to earthquakes a risk metric was calculated as function of 4 different parameters, with each parameter assigned a _risk weighting_ score dictating the their contribution to the final overall score.
+To determine the risk score associated with living in a US state susceptible to earthquakes a risk metric was calculated as function of 4 different parameters, with each parameter assigned a _risk weighting_ score dictating their contribution to the final overall score.
 
 | Parameter | Risk Weighting |
 |---|---|

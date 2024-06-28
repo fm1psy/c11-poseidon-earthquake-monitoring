@@ -102,7 +102,7 @@ def get_usa_only_earthquakes(conn: connection) -> list[tuple]:
 
 def get_top_significant_earthquakes(conn: connection) -> list[tuple]:
     """
-    Get top 5 significant earthquakes
+    Get top 10 significant earthquakes
     A number describing how significant the event is.
     Larger numbers indicate a more significant event.
     This value is determined on a number of factors,
@@ -117,16 +117,6 @@ def get_top_significant_earthquakes(conn: connection) -> list[tuple]:
         result = cur.fetchall()
 
     return result
-
-
-def create_significance_bar_chart(data: pd.DataFrame) -> alt.Chart:
-    """Create horizontal significant bar chart"""
-    data['title'] = data['title'].apply(
-        lambda value: value.split(' - ')[1].strip())
-    return alt.Chart(data) \
-        .mark_bar() \
-        .encode(y="title",
-                x="significance")
 
 
 def get_top_magnitude_earthquake(conn: connection) -> list[tuple]:
@@ -211,7 +201,11 @@ def create_risk_state_map(state_grouping: gpd.GeoDataFrame,
                 ), state_grouping['risk_score'].max()],
                 range=['#FDFD96', '#FF0000']
             ),
-            legend=alt.Legend(title="Risk Score")),
+            legend=alt.Legend(
+                title='Relative Risk',
+                labelExpr=''
+            )
+        ),
         tooltip=['risk_score:Q']
     ).transform_lookup(
         lookup='id',
@@ -240,7 +234,7 @@ def get_state_risk_map() -> alt.Chart:
     usa_earthquakes = convert_to_dataframe(
         usa_earthquakes, ["longitude", "latitude", "magnitude", "depth"])
     usa_earthquakes = join_state_locations(usa_earthquakes, states_gdf)
-    usa_earthquakes = group_earthquake_by_state(usa_earthquakes, states_gdf)
+    usa_earthquakes = group_earthquake_by_state(usa_earthquakes)
     usa_earthquakes = calculate_risk_metric(usa_earthquakes)
 
     state_background = alt.topo_feature(data.us_10m.url, 'states')
@@ -257,17 +251,6 @@ def get_magnitude_map() -> alt.Chart:
     magnitude_map = create_magnitude_map(earthquakes)
 
     return magnitude_map
-
-
-def get_significance_bar() -> alt.Chart:
-    """gets data and creates significance chart visual"""
-    conn = get_connection()
-    earthquakes = get_top_significant_earthquakes(conn)
-    earthquakes = convert_to_dataframe(
-        earthquakes, ['title', 'significance']
-    )
-    significance = create_significance_bar_chart(earthquakes)
-    return significance
 
 
 def create_two_layer_pie() -> alt.Chart:
@@ -294,24 +277,24 @@ def create_two_layer_pie() -> alt.Chart:
 
     total_count = usa_earthquakes.groupby('NAME')['count'].sum().reset_index()
 
-    inner = alt.Chart(total_count).mark_arc(innerRadius=0, outerRadius=100).encode(
+    inner = alt.Chart(total_count).mark_arc(innerRadius=0, outerRadius=100, stroke='black', strokeWidth=1).encode(
         theta=alt.Theta(field='count', type='quantitative', stack=True),
         color=alt.Color(field='NAME', type='nominal', legend=None))
 
-    inner_text = alt.Chart(total_count).mark_text(radius=80, size=10).encode(
+    inner_text = alt.Chart(total_count).mark_text(radius=80, size=12.5).encode(
         theta=alt.Theta(field='count', type='quantitative', stack=True),
         text=alt.Text(field='NAME', type='nominal'),
         color=alt.value('black')
     )
 
-    outer = alt.Chart(usa_earthquakes).mark_arc(innerRadius=100, outerRadius=140).encode(
+    outer = alt.Chart(usa_earthquakes).mark_arc(innerRadius=100, outerRadius=140, stroke='black', strokeWidth=1).encode(
         theta=alt.Theta(field='count', type='quantitative', stack=True),
         color=alt.Color(field='magnitude_bin', type='nominal'),
         order=alt.Order(field='NAME'),
         detail='NAME'
     )
 
-    outer_text = alt.Chart(usa_earthquakes).mark_text(radius=120, size=12).encode(
+    outer_text = alt.Chart(usa_earthquakes).mark_text(radius=120, size=9).encode(
         theta=alt.Theta(field='count', type='quantitative', stack=True),
         text=alt.Text(field='magnitude_bin', type='nominal'),
         color=alt.value('black'),
@@ -328,5 +311,4 @@ def create_two_layer_pie() -> alt.Chart:
 if __name__ == "__main__":
     get_state_risk_map()
     get_magnitude_map()
-    get_significance_bar()
     create_two_layer_pie()

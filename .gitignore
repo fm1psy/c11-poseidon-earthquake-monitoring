@@ -14,3 +14,4 @@ terraform.tfstate.backup
 
 .coverage
 dashboard/cb_*
+.DS_Store
