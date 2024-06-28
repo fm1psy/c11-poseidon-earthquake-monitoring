@@ -20,7 +20,7 @@ All greyed out states have no recorded earthquakes.
 
 An example is illustrated below:
 
-![Example State Map Visual](link_placeholder)
+![Example State Map Visual](https://github.com/fm1psy/c11-poseidon-earthquake-monitoring/blob/main/diagrams/us_state_map.png)
 
 ### Key Files
 
