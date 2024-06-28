@@ -229,8 +229,7 @@ def create_home_page():
     conn = get_connection()
     recent_earthquake_loc, recent_earthquake_time, recent_earthquake_mag = get_most_recent_earthquake_above_mag_6(
         conn)
-    st.subheader(
-        f"The most recent significant earthquake was recorded {recent_earthquake_loc.split("-")[1]} at {recent_earthquake_time} with a magnitude of {recent_earthquake_mag}.")
+    st.subheader(f"The most recent significant earthquake was recorded {recent_earthquake_loc.split("-")[1]} at {recent_earthquake_time} with a magnitude of {recent_earthquake_mag}.")
 
     with st.expander('Click here for more information on earthquake magnitudes'):
         st.write(
