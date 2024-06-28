@@ -18,6 +18,14 @@ def test_endpoint_get_earthquakes(mock_all_earthquakes, client):
     assert isinstance(response.json, list)
 
 
+@patch("api.get_earthquake_data")
+def test_endpoint_get_earthquakes_error_handling(mock_all_earthquakes, client):
+    mock_all_earthquakes.side_effect = ValueError
+    response = client.get("/earthquakes")
+    assert response.status_code == 400
+    assert "error" in response.json
+
+
 def test_get_filter_queries():
     test_filter_dict = {
         STATUS_FILTER_KEY: "status",
