@@ -211,7 +211,11 @@ def create_risk_state_map(state_grouping: gpd.GeoDataFrame,
                 ), state_grouping['risk_score'].max()],
                 range=['#FDFD96', '#FF0000']
             ),
-            legend=alt.Legend(title="Risk Score")),
+            legend=alt.Legend(
+                title='Relative Risk',
+                labelExpr=''
+            )
+        ),
         tooltip=['risk_score:Q']
     ).transform_lookup(
         lookup='id',
@@ -294,24 +298,24 @@ def create_two_layer_pie() -> alt.Chart:
 
     total_count = usa_earthquakes.groupby('NAME')['count'].sum().reset_index()
 
-    inner = alt.Chart(total_count).mark_arc(innerRadius=0, outerRadius=100).encode(
+    inner = alt.Chart(total_count).mark_arc(innerRadius=0, outerRadius=100, stroke='black', strokeWidth=1).encode(
         theta=alt.Theta(field='count', type='quantitative', stack=True),
         color=alt.Color(field='NAME', type='nominal', legend=None))
 
-    inner_text = alt.Chart(total_count).mark_text(radius=80, size=10).encode(
+    inner_text = alt.Chart(total_count).mark_text(radius=80, size=12.5).encode(
         theta=alt.Theta(field='count', type='quantitative', stack=True),
         text=alt.Text(field='NAME', type='nominal'),
         color=alt.value('black')
     )
 
-    outer = alt.Chart(usa_earthquakes).mark_arc(innerRadius=100, outerRadius=140).encode(
+    outer = alt.Chart(usa_earthquakes).mark_arc(innerRadius=100, outerRadius=140, stroke='black', strokeWidth=1).encode(
         theta=alt.Theta(field='count', type='quantitative', stack=True),
         color=alt.Color(field='magnitude_bin', type='nominal'),
         order=alt.Order(field='NAME'),
         detail='NAME'
     )
 
-    outer_text = alt.Chart(usa_earthquakes).mark_text(radius=120, size=12).encode(
+    outer_text = alt.Chart(usa_earthquakes).mark_text(radius=120, size=9).encode(
         theta=alt.Theta(field='count', type='quantitative', stack=True),
         text=alt.Text(field='magnitude_bin', type='nominal'),
         color=alt.value('black'),
