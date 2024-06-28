@@ -56,7 +56,7 @@ def get_filter_queries(earthquake_filters: dict[str]) -> list[str]:
     """Return a list of WHERE command strings that can be added onto a postgreSQL query.
     """
     res = []
-    logging.info(f"""Filters used: {list(earthquake_filters.items())}""")
+    logging.info("""Filters used: %s""", list(earthquake_filters.items()))
     status = earthquake_filters[STATUS_FILTER_KEY]
     network = earthquake_filters[NETWORK_FILTER_KEY]
     alert = earthquake_filters[ALERT_FILTER_KEY]
@@ -183,7 +183,7 @@ def get_earthquakes() -> Response:
             COUNTRY_FILTER_KEY: request.args.get("country")
         }
         earthquakes = get_earthquake_data(user_filters)
-        logging.info(f"{len(earthquakes)} earthquake events were retrieved.")
+        logging.info("%s earthquake events were retrieved.", len(earthquakes))
         return jsonify(earthquakes), 200
     except Exception as e:  # pylint: disable=broad-exception-caught
         logging.error(e)
