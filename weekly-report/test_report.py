@@ -1,5 +1,5 @@
 # pylint: skip-file
-from main import previous_monday, get_file_keys_from_bucket, get_prefix, monday_week_date
+from report import previous_monday, get_file_keys_from_bucket, get_prefix, monday_week_date
 import datetime
 from unittest.mock import MagicMock
 

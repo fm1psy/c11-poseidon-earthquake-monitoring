@@ -1,5 +1,6 @@
 .venv
 .env
+venv
 
 __pycache__
 .pytest_cache
@@ -12,4 +13,6 @@ terraform.tfstate.backup
 .terraform
 .terraform.lock.hcl
 
+.coverage
+dashboard/cb_*
 .DS_Store

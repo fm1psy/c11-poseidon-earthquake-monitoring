@@ -3,6 +3,7 @@ FROM python:latest
 WORKDIR /app
 
 COPY requirements.txt .
+COPY cb_2023_us_state_500k/ .
 
 RUN pip install -r requirements.txt
 

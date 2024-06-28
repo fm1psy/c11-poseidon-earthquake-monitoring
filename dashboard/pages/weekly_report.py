@@ -80,13 +80,13 @@ def create_page():
 
     s3_client = get_s3_client()
     folder = get_prefix(CURRENT_DATE)
-    test_file_name = "2024-06-26.pdf"
-    object_key = os.path.join(folder, test_file_name)
+    file_name = f"{CURRENT_DATE}.pdf"
+    object_key = os.path.join(folder, file_name)
     # Use Streamlit's download button to enable file download
-    st.download_button(label=f"Download report: {test_file_name}",
+    st.download_button(label=f"Download report: {file_name}",
                        data=get_s3_file(
                            s3_client, BUCKET_NAME, object_key),
-                       file_name=test_file_name,
+                       file_name=file_name,
                        )
     st.write("Previous weekly reports are also available below:")
     for s3_object in list_s3_objects(s3_client, bucket=BUCKET_NAME)["Contents"]:
