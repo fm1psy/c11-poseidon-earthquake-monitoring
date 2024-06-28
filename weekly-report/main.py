@@ -11,7 +11,7 @@ from botocore.exceptions import NoCredentialsError
 from dotenv import load_dotenv
 
 from visuals import get_state_risk_map, get_magnitude_map, get_total_number_earthquakes, create_two_layer_pie
-from visuals import get_significance_bar, get_top_magnitude_earthquake, get_top_significant_earthquakes, get_connection
+from visuals import get_top_magnitude_earthquake, get_top_significant_earthquakes, get_connection
 
 load_dotenv()
 
@@ -47,6 +47,7 @@ def download_shapefiles(bucket_name: str, s3: client, folder_path: str) -> None:
 
 
 def monday_week_date(current_date: date) -> str:
+    """Returns the monday of """
     weekday = current_date.weekday()
     if weekday == 0:
         return current_date.strftime("%d-%m-%Y")
@@ -124,7 +125,6 @@ def handler(event=None, context=None):
                         s_client, DESTINATION_DIR)
     logging.info(f"Shapefiles downloaded from {ENV['SHAPEFILE_BUCKET_NAME']}")
 
-    sig_chart = get_significance_bar()
     mag_map = get_magnitude_map()
     state_map = get_state_risk_map()
     two_layer_pie = create_two_layer_pie()
