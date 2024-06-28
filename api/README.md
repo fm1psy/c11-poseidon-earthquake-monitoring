@@ -1,27 +1,19 @@
-# Earthquake Monitoring API
+# 🌐 Earthquake Monitoring API
 This folder contains the codebase to deploy an API, whether locally or online. This API is used to facilitate the retrieval of earthquake data from the relational database.
 
-## Files
+## 📁 Files
 | File Name | Purpose |
 |-----------|---------|
 |`requirements.txt`|Contains all the packages that should be installed for this program to work.|
 |`api.py`|Contains the main program that runs the api.|
 |`test_api.py`|Contains all the tests developed to verify the api can run correctly.|
 
-## Setup
+## 🔌 Setup
 Before you can run this api, it would be useful to have a database setup; otherwise, you will not be able to connect and pull data from this api. Make sure you have following the instructions in the [database](https://github.com/fm1psy/c11-poseidon-earthquake-monitoring/tree/main/database) directory.
 
-## Instructions to deploy the API
-Make sure you are inside the api folder before you follow these instructions. 
-1. Run the following commands to instantiate a virtual environment. This will enable you to safely install the required packages.
-```
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
 
-2. Create a `.env ` file within this directory, and make sure the following values are inside it:
-
+## ❗️❗️ Important
+Setup the following environmental variables in a `.env` file:
 | Variable Name | Purpose |
 |---------------|---------|
 | DB_USERNAME | The username that you will be using to interact with the database. |
@@ -30,9 +22,32 @@ pip install -r requirements.txt
 | DB_PORT | The port the database is listening to. |
 | DB_NAME | The name of the database. |
 
-3. Run the script locally using `python api.py`
+### 💿  Dependencies
+There are various folders for each part of the project. In order to run the API, you will need to install the required libraries. This can be done using the code provided below though the terminal:
+```
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-## Retrieving earthquake data
+
+### 🏃‍♂️‍➡️ Running the scripts
+All the scripts only require basic commands to be executed. Different commands are used depending on the software. Ensure that you are in the dashboard directory before using these commands.
+```
+# Python
+python3 api.py
+
+# Terraform
+terraform init
+terraform apply
+yes
+
+# Docker
+docker build -t "image"
+docker run --env-file .env -t "image: tag"
+```
+
+## 📈 Retrieving earthquake data
 Once you have the api running, you should be able to connect to the database and retrieve the data accordingly. There is one endpoint, `earthquakes`, that can be accessed through the following:
 `URL:port/earthquakes`
 This will retrieve every earthquake recorded in the RDS. Below is an example of the expected response:
@@ -61,7 +76,7 @@ This will retrieve every earthquake recorded in the RDS. Below is an example of 
   }]
 ```
 
-### Options
+### 🗂️ Options
 Depending on your need for this api, it may be that you wish to retrieve a subset of the earthquake data. There are several options within the `earthquakes` endpoint to facilitate this. These are included using the following format:
 `URL:port/earthquakes?[OPTION]=[VALUE]&[OPTION]=[VALUE]`
 where `OPTION` is the field you wish to filter the data by, and `VALUE` is the value to filter by. The `&` is optional, and can be used to include multiple options in your data extraction e.g. all earthquakes with a minimum magnitude of 5 within the country of Japan. Below is a table detailing the options available, their purpose, and the current filters accepted.

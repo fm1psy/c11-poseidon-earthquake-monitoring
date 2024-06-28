@@ -3,6 +3,7 @@ gatherUsageStats = false
 
 [theme]
 base = "light"
+
 primaryColor = "#30B6E2"
 backgroundColor = "#006D77"
 secondaryBackgroundColor = "#6BB5AE"

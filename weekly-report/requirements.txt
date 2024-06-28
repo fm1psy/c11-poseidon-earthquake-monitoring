@@ -6,3 +6,4 @@ vega_datasets
 pandas
 xhtml2pdf 
 vl-convert-python
+boto3

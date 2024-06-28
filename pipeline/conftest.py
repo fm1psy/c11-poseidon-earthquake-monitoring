@@ -492,5 +492,117 @@ def example_transformed_data(get_epoch_time):
 
 
 @pytest.fixture
+def example_single_earthquake(get_epoch_time):
+    return {
+        "earthquake_id": "ak0247tc2ogk",
+        "alert": "green",
+        "status": "automatic",
+        "network": "ak",
+        "magtype": "ml",
+        "earthquake_type": "earthquake",
+        "magnitude": 3.2,
+        "lon": -140.7726,
+        "lat": 60.1438,
+        "depth": 0,
+        "time": get_epoch_time,
+        "felt": None,
+        "cdi": None,
+        "mmi": None,
+        "significance": 158,
+        "nst": None,
+        "dmin": None,
+        "gap": None,
+        "title": "M 3.2 - 88 km NW of Yakutat, Alaska"
+    }
+
+
+@pytest.fixture
 def example_id_tables():
     return {"green": 1}, {"automatic": 1, "reviewed": 2}, {"ak": 1}, {"ml": 1}, {"earthquake": 1}
+
+@pytest.fixture
+def liverpool_earthquake():
+    return {
+        "earthquake_id": "ak0247tc2ogk",
+        "alert": "green",
+        "status": "automatic",
+        "network": "ak",
+        "magtype": "ml",
+        "earthquake_type": "earthquake",
+        "magnitude": 6.0,
+        "lon": -2.964996,
+        "lat": 53.407624,
+        "depth": 0,
+        "time": '2024-06-24 12: 22: 22',
+        "felt": None,
+        "cdi": None,
+        "mmi": None,
+        "significance": 158,
+        "nst": None,
+        "dmin": None,
+        "gap": None,
+        "title": "M 3.2 - 88 km NW of Yakutat, Alaska"
+    }
+
+
+
+
+@pytest.fixture
+def example_topic():
+    return {'topic_id': 12, 'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test_email',
+            'min_magnitude': 4.5, 'lon': -2.964996, 'lat': 53.407624}
+
+
+@pytest.fixture
+def example_topics():
+    return [
+        {'topic_id': 8, 'topic_arn': 'arn:aws:sns:us-east-1:123456789012:ExampleTopic',
+            'min_magnitude': 4.5, 'lon': -73.935242, 'lat': 40.730610},
+        {'topic_id': 9, 'topic_arn': 'arn:aws:sns:us-west-2:123456789012:AnotherTopic',
+            'min_magnitude': 3.8, 'lon': -122.419418, 'lat': 37.774929},
+        {'topic_id': 10, 'topic_arn': 'arn:aws:sns:eu-west-1:123456789012:ThirdTopic',
+            'min_magnitude': 5.2, 'lon': 0.127800, 'lat': 51.507400},
+        {'topic_id': 11, 'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test',
+            'min_magnitude': 3.0, 'lon': 140.053711, 'lat': 38.203655},
+        {'topic_id': 12, 'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test_email',
+            'min_magnitude': 4.5, 'lon': -2.964996, 'lat': 53.407624}
+    ]
+
+
+@pytest.fixture
+def example_user():
+    return {
+        'user_id': 22,
+        'email_address': 'trainee.joe.lam@sigmalabs.co.uk',
+        'phone_number': '447482569206',
+        'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test_email',
+        'min_magnitude': 4.5,
+        'lon': -2.964996, 
+        'lat': 53.407624
+    }
+
+
+@pytest.fixture
+def example_users():
+    return [{
+        'user_id': 22,
+        'email_address': 'trainee.joe.lam@sigmalabs.co.uk',
+        'phone_number': '447482569206',
+        'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test_email',
+        'min_magnitude': 4.5,
+        'lon': -2.964996, 
+        'lat': 53.407624
+        },
+        {
+        'user_id': 21,
+        'email_address': 'trainee.ella.jepsen@sigmalabs.co.uk',
+        'phone_number': '07552224539',
+        'topic_arn': 'arn:aws:sns:eu-west-2:129033205317:c11-poseidon-test',
+        'min_magnitude': 3,
+        'lon': -2.964996, 
+        'lat': 53.407624
+        }]
+
+
+
+
