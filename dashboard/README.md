@@ -20,6 +20,8 @@ Setup the following environmental variables in a `.env` file:
 | DB_USERNAME | The username that you will be using to interact with the database. |
 | DB_PASSWORD | The password required to interact with the database. |
 | DB_PORT | The port the database is listening to. |
+| ACCESS_KEY | The unique identifier associated with your AWS account or IAM user.  |
+| SECRET_ACCESS_KEY | The 'password' to access your AWS account or IAM user account |
 
 
 ### 💿  Dependencies
