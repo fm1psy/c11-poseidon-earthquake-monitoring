@@ -1,6 +1,6 @@
 # pylint: skip-file
 import pytest
-from api import STATUS_FILTER_KEY, NETWORK_FILTER_KEY, ALERT_FILTER_KEY, MAG_TYPE_FILTER_KEY, EVENT_FILTER_KEY, MIN_MAGNITUDE_FILTER_KEY, CONTINENT_FILTER_KEY, COUNTRY_FILTER_KEY, get_filter_queries, filter_by_continent, filter_by_country, filter_by_location, is_continent_valid
+from api import STATUS_FILTER_KEY, NETWORK_FILTER_KEY, ALERT_FILTER_KEY, MAG_TYPE_FILTER_KEY, EVENT_FILTER_KEY, MIN_MAGNITUDE_FILTER_KEY, CONTINENT_FILTER_KEY, COUNTRY_FILTER_KEY, get_filter_queries, filter_by_continent, filter_by_country, filter_by_location, is_continent_valid, get_earthquake_data
 from unittest.mock import patch
 
 
@@ -26,6 +26,28 @@ def test_endpoint_get_earthquakes_error_handling(mock_all_earthquakes, client):
     assert "error" in response.json
 
 
+@patch("api.get_connection")
+@patch("api.get_filter_queries")
+@patch("api.get_cursor")
+@patch("api.filter_by_location")
+def test_get_earthquake_data_function_calls(mock_location_filter, mock_cursor, mock_filter_queries, mock_connection):
+    test_filter_dict = {
+        STATUS_FILTER_KEY: "status",
+        NETWORK_FILTER_KEY: "net",
+        ALERT_FILTER_KEY: "alert",
+        MAG_TYPE_FILTER_KEY: "magtype",
+        EVENT_FILTER_KEY: "type",
+        MIN_MAGNITUDE_FILTER_KEY: "min mag",
+        CONTINENT_FILTER_KEY: "continent",
+        COUNTRY_FILTER_KEY: "country"
+    }
+    get_earthquake_data(test_filter_dict)
+    mock_location_filter.assert_called_once == True
+    mock_cursor.assert_called_once == True
+    mock_filter_queries.assert_called_once == True
+    mock_connection.assert_called_once == True
+
+
 def test_get_filter_queries():
     test_filter_dict = {
         STATUS_FILTER_KEY: "status",
@@ -34,7 +56,8 @@ def test_get_filter_queries():
         MAG_TYPE_FILTER_KEY: "magtype",
         EVENT_FILTER_KEY: "type",
         MIN_MAGNITUDE_FILTER_KEY: "min mag",
-        CONTINENT_FILTER_KEY: "continent"
+        CONTINENT_FILTER_KEY: "continent",
+        COUNTRY_FILTER_KEY: "country"
     }
 
     assert get_filter_queries(test_filter_dict) == [
@@ -55,7 +78,8 @@ def test_get_filter_queries_alert_is_first_filter():
         MAG_TYPE_FILTER_KEY: "magtype",
         EVENT_FILTER_KEY: "type",
         MIN_MAGNITUDE_FILTER_KEY: "min mag",
-        CONTINENT_FILTER_KEY: "continent"
+        CONTINENT_FILTER_KEY: "continent",
+        COUNTRY_FILTER_KEY: "country"
     }
 
     assert get_filter_queries(test_filter_dict) == [
