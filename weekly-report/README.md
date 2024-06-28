@@ -28,7 +28,7 @@ US State Shapefile: https://www.census.gov/geographies/mapping-files/time-series
 
 ### Assumptions
 
-To determine the risk score associated with living in a US state susceptible to earthquakes a risk metric was calculated as function of 4 different parameters, with each parameter assigned a _risk weighting_ score dictating the their contribution to the final overall score.
+To determine the risk score associated with living in a US state susceptible to earthquakes a risk metric was calculated as function of 4 different parameters, with each parameter assigned a _risk weighting_ score dictating their contribution to the final overall score.
 
 | Parameter | Risk Weighting |
 |---|---|

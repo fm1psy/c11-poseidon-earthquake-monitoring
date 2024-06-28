@@ -119,16 +119,6 @@ def get_top_significant_earthquakes(conn: connection) -> list[tuple]:
     return result
 
 
-def create_significance_bar_chart(data: pd.DataFrame) -> alt.Chart:
-    """Create horizontal significant bar chart"""
-    data['title'] = data['title'].apply(
-        lambda value: value.split(' - ')[1].strip())
-    return alt.Chart(data) \
-        .mark_bar() \
-        .encode(y="title",
-                x="significance")
-
-
 def get_top_magnitude_earthquake(conn: connection) -> list[tuple]:
     """
     Get top recorded earthquake last week
@@ -263,17 +253,6 @@ def get_magnitude_map() -> alt.Chart:
     return magnitude_map
 
 
-def get_significance_bar() -> alt.Chart:
-    """gets data and creates significance chart visual"""
-    conn = get_connection()
-    earthquakes = get_top_significant_earthquakes(conn)
-    earthquakes = convert_to_dataframe(
-        earthquakes, ['title', 'significance']
-    )
-    significance = create_significance_bar_chart(earthquakes)
-    return significance
-
-
 def create_two_layer_pie() -> alt.Chart:
     """creates two-layer-pie chart"""
     conn = get_connection()
@@ -332,5 +311,4 @@ def create_two_layer_pie() -> alt.Chart:
 if __name__ == "__main__":
     get_state_risk_map()
     get_magnitude_map()
-    get_significance_bar()
     create_two_layer_pie()
