@@ -34,7 +34,7 @@ def get_sns_client():
 def create_topic(client):
     """creates sns topic for particular longitude, latitude and magnitude"""
     response = client.create_topic(
-        Name="c11-poseidon-test"
+        Name="c11-poseidon-test-3"
     )
     return response
 
@@ -175,6 +175,42 @@ def get_user_subscription_arn(conn, user_info):
     return result["sms_subscription_arn"], result["email_subscription_arn"]
 
 
+def get_topic_arns_for_emails_pending_confirmation(conn):
+    """gets topic arns for emails with pending confirmation"""
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curr:
+        curr.execute(f"""select t.topic_id, u.user_id, t.topic_arn, u.email_address from topics as t
+                        join user_topic_assignments as uta
+                        on t.topic_id = uta.topic_id
+                        join users as u
+                        on u.user_id = uta.user_id
+                        where uta.email_subscription_arn = 'pending confirmation'""")
+        result = curr.fetchall()
+    return result
+
+
+def update_email_subscriptions_arn(conn, client):
+    """updates the email subscription arn in database"""
+    topic_data = get_topic_arns_for_emails_pending_confirmation(conn)
+    if topic_data != []:
+        for topic_arn_and_email in topic_data:
+            subscription_arn = get_subscription_arn_for_topic_and_email(
+                topic_arn_and_email["topic_arn"], topic_arn_and_email["email_address"], client)
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as curr:
+                curr.execute(f"""update user_topic_assignments
+                                    set email_subscription_arn='{subscription_arn}'
+                                    where user_id={topic_arn_and_email['user_id']}
+                                    and topic_id={topic_arn_and_email['topic_id']};""")
+                conn.commit()
+
+
+def get_subscription_arn_for_topic_and_email(topic_arn, email_address, client):
+    """gets the subscription arns for given topics and emails"""
+    subscriptions = client.list_subscriptions_by_topic(TopicArn=topic_arn)
+    for subscription in subscriptions['Subscriptions']:
+        if subscription['Endpoint'] == email_address:
+            return subscription['SubscriptionArn']
+
+
 def create_unsubscribe_form():
     """creates unsubscribe form"""
     email = ""
@@ -209,9 +245,10 @@ def create_notifications_page():
         page_title="Earthquake Alerts Subscription",)
     user_info = create_subscription_form()
     create_unsubscribe_form()
+    client = get_sns_client()
+    conn = get_connection()
+    update_email_subscriptions_arn(conn, client)
     if user_info != []:
-        client = get_sns_client()
-        conn = get_connection()
         if check_if_user_exists(conn, user_info) is None:
             user_id = upload_user_to_database(conn, user_info)
         if check_if_topic_exists(conn, user_info) is None:

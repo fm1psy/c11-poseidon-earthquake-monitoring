@@ -168,7 +168,7 @@ def get_state_risk_map() -> alt.Chart:
     """gets earthquake data and creates magnitude map visual"""
     conn = get_connection()
     states_gdf = gpd.read_file(
-        'cb_2023_us_state_500k.shp')
+        './cb_2023_us_state_500k/cb_2023_us_state_500k.shp')
     ansi = pd.read_csv(
         'https://www2.census.gov/geo/docs/reference/state.txt', sep='|')
     ansi.columns = ['id', 'abbr', 'state', 'statens']
