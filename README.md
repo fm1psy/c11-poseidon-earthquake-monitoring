@@ -29,6 +29,16 @@ For this project, we have designed it with the intention of hosting everything o
 
 ### ✏️ Design Decisions
 
+#### PDF Report Generator
+Reports are generated inside a lambda function and are stored in the S3 bucket “report storage bucket”. This function is triggered once every week, which is enough data for a valuable summary to be generated, such as average magnitude and depth.
+Users that wish to access a weekly report can do so through the dashboard, as we plan to have a page dedicated to this. This allows us to create a service that gives users the ability to access reports not just from this week, but from previous ones too.
+#### Earthquake Dashboard Service
+This dashboard service reads from the postgres Relational Database (RDS) to display key statistics regarding the data available (mean values, significant earthquakes, etc.). Because we want this service to be available at all times, we are choosing to run it as an Elastic Container Service (ECS). It also reads from an S3 bucket which contains every weekly report since the genesis of this system, so as to provide users with a downloadable PDF for every week.
+#### Earthquake User API Service
+This is run as an ECS, where the API is hosted by a Fargate instance, as the API is a constantly running service
+#### ETL Pipeline with Email Alert
+This pipeline is run as a lambda function, since it is expected to only run for at most a minute, and lambda has the capacity to expand horizontally if need be. It is triggered by an event scheduler every minute, since that is how often the data in the USGS QuakeML is updated. It then processes the data extracted and writes it to the RDS. It will also send an alert via SNS to those that have subscribed to it.
+
 ## 📏 Database Design
 
 For a visual representation of the database schema and details on the design decisions, please refer to this section.
@@ -38,9 +48,6 @@ For a visual representation of the database schema and details on the design dec
 The provided Entity-Relationship Diagram (ERD) illustrates a database schema designed for tracking earthquake data. The schema follows the principles of Third Normal Form (3NF). There is a main earthquake table that captures data specific to each earthquake event. Additionally, lookup tables are included for categories such as status, alerts and networks.
 
 ![ERD Diagram](https://github.com/fm1psy/c11-poseidon-earthquake-monitoring/blob/main/diagrams/erd_diagram.png)
-
-### 💡 Design Decisions
-
 
 
 ## ✅ Getting Setup
