@@ -77,7 +77,7 @@ def test_filter_by_continent_error_handling(caplog):
 
 def test_filter_by_country_error_handling(caplog):
     error_data = [{}, {}]
-    filter_by_continent(error_data, "Ecuador")
+    filter_by_country(error_data, "Ecuador")
     assert "Error appending data row (country): " in caplog.text
 
 
